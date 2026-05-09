@@ -1,0 +1,22 @@
+{
+  "name": "elgato",
+  "description": "MCP wiring for Elgato Key Light control server",
+  "author": {
+    "name": "butterflyskies"
+  },
+  "license": "MIT OR Apache-2.0",
+  "mcpServers": {
+    "elgato-keylight": {
+      "type": "stdio",
+      "command": "uv",
+      "args": [
+        "run",
+        "--from",
+        "git+https://github.com/butterflyskies/elgato-control-home-automation",
+        "--extra",
+        "mcp",
+        "elgato-mcp"
+      ]
+    }
+  }
+}

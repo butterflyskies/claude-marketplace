@@ -1,0 +1,22 @@
+{
+  "name": "gate",
+  "description": "cc-toolgate PreToolUse hook for Bash command validation",
+  "author": {
+    "name": "butterflyskies"
+  },
+  "license": "MIT OR Apache-2.0",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cc-toolgate",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

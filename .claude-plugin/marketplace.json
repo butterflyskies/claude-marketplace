@@ -1,0 +1,55 @@
+{
+  "name": "butterflyskies",
+  "owner": {
+    "name": "butterflyskies",
+    "email": "lina@butterflysky.dev"
+  },
+  "description": "Skills, hooks, and MCP server plugins for butterflyskies workflows",
+  "metadata": {
+    "pluginRoot": "./plugins"
+  },
+  "plugins": [
+    {
+      "name": "bsky",
+      "source": "./bsky",
+      "description": "Development workflow skills — code review, develop, land, briefing, and more",
+      "license": "MIT OR Apache-2.0"
+    },
+    {
+      "name": "memory",
+      "source": "./memory",
+      "description": "MCP wiring for memory-mcp semantic memory server",
+      "license": "MIT OR Apache-2.0"
+    },
+    {
+      "name": "gate",
+      "source": "./gate",
+      "description": "cc-toolgate PreToolUse hook for Bash command validation",
+      "license": "MIT OR Apache-2.0"
+    },
+    {
+      "name": "jj",
+      "source": "./jj",
+      "description": "prodagent jj hooks — workspace creation, cleanup, and destructive-git guard",
+      "license": "MIT OR Apache-2.0"
+    },
+    {
+      "name": "gh-notify",
+      "source": "./gh-notify",
+      "description": "MCP wiring for gh-notify-mcp GitHub notification triage server",
+      "license": "MIT OR Apache-2.0"
+    },
+    {
+      "name": "elgato",
+      "source": "./elgato",
+      "description": "MCP wiring for Elgato Key Light control server",
+      "license": "MIT OR Apache-2.0"
+    },
+    {
+      "name": "bsky-meta",
+      "source": "./bsky-meta",
+      "description": "Loadout plugin — installs all butterflyskies plugins via dependencies",
+      "license": "MIT OR Apache-2.0"
+    }
+  ]
+}

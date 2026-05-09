@@ -1,0 +1,11 @@
+{
+  "name": "bsky",
+  "description": "Development workflow skills — code review, develop, land, briefing, and more",
+  "author": {
+    "name": "butterflyskies",
+    "email": "lina@butterflysky.dev"
+  },
+  "repository": "https://github.com/butterflyskies/claude-marketplace",
+  "license": "MIT OR Apache-2.0",
+  "keywords": ["workflow", "code-review", "development", "skills"]
+}

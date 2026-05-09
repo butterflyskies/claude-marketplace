@@ -1,0 +1,16 @@
+{
+  "name": "bsky-meta",
+  "description": "Loadout plugin — installs all butterflyskies plugins via dependencies",
+  "author": {
+    "name": "butterflyskies"
+  },
+  "license": "MIT OR Apache-2.0",
+  "dependencies": [
+    "bsky",
+    "memory",
+    "gate",
+    "jj",
+    "gh-notify",
+    "elgato"
+  ]
+}
