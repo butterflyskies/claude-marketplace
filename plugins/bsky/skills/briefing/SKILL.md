@@ -20,8 +20,11 @@ if you haven't already this session, and use those identities for all gh operati
 | `notifications`  | 1 only |
 | `prs`            | 2 only |
 | `tasks`          | 3 only |
-| `followups`      | 4 only |
-| *(empty)*        | All four |
+| `followups`      | 4 only (report what's due) |
+| `followups run`  | 4 only (execute all due checks) |
+| `followups all`  | 4 only (execute all checks regardless of due date) |
+| `followups <N or text>` | 4 only (execute matching item regardless of due date) |
+| *(empty)*        | All four (Phase 4 reports only) |
 
 Multiple keywords can be combined (e.g. `prs tasks`). Match case-insensitively.
 
@@ -77,7 +80,7 @@ gh api 'repos/butterflyskies/tasks/milestones?state=open'
 - Highlight anything past due
 - If no open tasks, collapse to: **Tasks: none**
 
-## Phase 4: Follow-ups due
+## Phase 4: Follow-ups
 
 Use memory-mcp's `recall` tool to search for periodic follow-ups. If a `periodic-followups`
 memory exists (scope: global), read it. For each active item:
@@ -89,9 +92,30 @@ memory exists (scope: global), read it. For each active item:
    - monthly = last checked + 30 days
 3. Compare against today's date
 
-Report due/not-yet-due status. Point users to `/check-in` to execute the actual checks.
+### Report mode (`followups` or part of full briefing)
 
-**Do not execute follow-up checks** — that's `/check-in`'s job.
+Report due/not-yet-due status only. Offer to run checks:
+"Want me to run the due checks? Use `/briefing followups run` to execute."
+
+### Execute mode (`followups run`, `followups all`, `followups <N or text>`)
+
+- `followups run` — execute checks for all items that are due or overdue
+- `followups all` — execute every active item regardless of due date
+- `followups 1` — execute item #1 regardless of due date
+- `followups serena` — execute items whose title matches (case-insensitive)
+
+For each selected item:
+
+1. **Execute the check** — run the steps described in the item's **How** field (typically
+   `gh` commands). Collect output and interpret:
+   - Has the status changed since last check?
+   - Is there new activity (comments, commits, state changes)?
+   - Is the "Done when" condition now met?
+2. **Report findings** — summarize what changed (or didn't) since last check
+3. **Update `Last checked`** — use memory-mcp's `edit` tool on the `periodic-followups`
+   memory (scope: global) to set today's date
+4. **If "Done when" is met** — ask the user before moving the item to the Completed Items
+   section. Don't move automatically.
 
 ## Output format
 
@@ -165,7 +189,7 @@ Per-item status with last-checked date and next-due date:
 **Serena PR #1007 — Global Memories** (weekly)
 - Last checked: 2026-02-19
 - Next due: 2026-02-26
-- Not yet due. Use `/check-in 1` when ready.
+- Not yet due. Use `/briefing followups 1` to run now.
 ```
 
 ### General rules
