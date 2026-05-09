@@ -8,8 +8,8 @@ description: "When requested: session-start situational awareness — notificati
 Scan what's happened since last session and present a concise summary. This skill is
 **read-only** — it never modifies anything (except syncing notification state via gh-notify).
 
-Use memory-mcp's `read` tool to load the `required-environment-variables` memory (scope: global)
-if you haven't already this session, and use those identities for all gh operations throughout.
+If a `required-environment-variables` memory exists (scope: global), read and apply it
+before any git/gh operations.
 
 ## Argument handling
 
@@ -45,11 +45,11 @@ This skips already-acted/dismissed notifications from previous sessions.
 
 ## Phase 2: Open PRs
 
-Check PRs involving both identities:
+Check open PRs involving the user. If the `required-environment-variables` memory specifies
+multiple identities, search for each:
 
 ```bash
-gh search prs --state=open --involves=butterflysky --json repository,title,number,url,updatedAt
-gh search prs --state=open --involves=butterflysky-ai --json repository,title,number,url,updatedAt
+gh search prs --state=open --involves=<identity> --json repository,title,number,url,updatedAt
 ```
 
 - Deduplicate by URL
@@ -67,11 +67,12 @@ gh search prs --state=open --involves=butterflysky-ai --json repository,title,nu
 
 ## Phase 3: Tasks & Milestones
 
-From the project tracker. Note: quote the milestones URL to prevent zsh glob expansion on `?`:
+From the project tracker (see `infrastructure-overview` memory for repo locations).
+Note: quote the milestones URL to prevent zsh glob expansion on `?`:
 
 ```bash
-gh issue list --repo butterflyskies/tasks --state open --json number,title,milestone,labels,assignees
-gh api 'repos/butterflyskies/tasks/milestones?state=open'
+gh issue list --repo <tasks-repo> --state open --json number,title,milestone,labels,assignees
+gh api 'repos/<tasks-repo>/milestones?state=open'
 ```
 
 - Group open issues by milestone
@@ -128,12 +129,12 @@ Condense related items from the same repo when there are many:
 ## Notifications (12 actionable / 30 total — 18 previously acted/dismissed)
 
 **mention** (2)
-- [NEW] `oraios/serena` — Add global memories support (PR)
-- [TRIAGED] `butterflyskies/cc-toolgate` — v4: tree-sitter-bash AST (PR)
+- [NEW] `owner/repo-a` — Add feature X (PR)
+- [TRIAGED] `owner/repo-b` — Refactor Y (PR)
 
 **author** (5)
-- [NEW] `butterflyskies/gossamer` — Add connect() syscall tracer (PR)
-- [NEW] `butterflyskies/elgato-control-home-automation` — 3 PRs (remove hardcoded lights, ...)
+- [NEW] `owner/repo-c` — Add syscall tracer (PR)
+- [NEW] `owner/repo-d` — 3 PRs (config cleanup, ...)
 - ...
 
 **ci_activity** (3)
@@ -153,9 +154,9 @@ comment count:
 
 | PR | Repo | CI | Reviews | Updated |
 |----|------|----|---------|---------|
-| [#1007](url) Add global memories support | oraios/serena | all pass | — | Feb 19 |
-| [#16](url) Add system event parser | butterflyskies/elfin | all pass | codex: changes_requested (3 comments) | Mar 5 |
-| [#9](url) Track Discord disconnect events | butterflysky/argus | pass | — | Jan 6 |
+| [#42](url) Add feature X | owner/repo-a | all pass | — | Feb 19 |
+| [#16](url) Add system event parser | owner/repo-b | all pass | reviewer: changes_requested (3 comments) | Mar 5 |
+| [#9](url) Track disconnect events | owner/repo-c | pass | — | Jan 6 |
 ```
 
 For PRs with review comments, briefly list the key concerns below the table under a
@@ -170,7 +171,7 @@ Unassigned issues in a separate group:
 ## Tasks & Milestones
 
 **Friday Focus — Feb 27** (due Feb 26, 14 open / 0 closed)
-- #69 Design adversarial code review sub-agent for cc-toolgate
+- #69 Design adversarial code review sub-agent
 - #68 Gossamer — system observability toolbox
 - ...
 

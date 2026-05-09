@@ -8,8 +8,9 @@ description: "Structured design process for software projects. Produces specific
 Produce design artifacts before implementation. The output lives in `docs/design/` and
 becomes the source of truth that `/develop` works from.
 
-Use memory-mcp to load `required-environment-variables` and any project-scoped memories
-(use `list` filtered by project scope) if not already loaded this session.
+If a `required-environment-variables` memory exists (scope: global), read and apply it.
+Also load any project-scoped memories (use `list` filtered by project scope) if not already
+loaded this session.
 
 ## Argument handling
 

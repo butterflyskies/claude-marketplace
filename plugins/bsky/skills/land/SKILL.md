@@ -8,8 +8,8 @@ disable-model-invocation: false
 
 Run this when wrapping up a work session. Work through each phase in order.
 
-Use memory-mcp's `recall` or `read` tool to load the `required-environment-variables` memory
-if you haven't already this session, and use those identities for all git/gh operations.
+If a `required-environment-variables` memory exists (scope: global), read and apply it
+before any git/gh operations.
 
 Use `recall` to find the `infrastructure-overview` memory for GitHub org conventions, project
 tracker locations, and issue routing rules.

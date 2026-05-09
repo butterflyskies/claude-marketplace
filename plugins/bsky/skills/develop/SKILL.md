@@ -8,7 +8,8 @@ description: "End-to-end development workflow with sub-agent specialization. Use
 Implement changes using specialized sub-agents, each with a dedicated context window.
 The coordinator (you) stays lean — orchestrate, don't accumulate.
 
-Use memory-mcp to load `required-environment-variables` and `rust-code-standards` memories
+If a `required-environment-variables` memory exists (scope: global), read and apply it.
+Also load `rust-code-standards` if working in a Rust project.
 (scope: global) if not already loaded this session. Check for project-scoped memories (use
 `list` filtered by project scope) — pass their contents to sub-agents as context.
 
@@ -260,8 +261,7 @@ After all phases pass (review is clean):
    The generated output in `target/doc/` is not committed (it's gitignored).
 3. Commit with a descriptive message following repo conventions
 4. Push to the feature branch
-5. Use `GIT_CONFIG_GLOBAL=~/.gitconfig.ai` and `GH_CONFIG_DIR=~/.config/gh-butterflysky-ai`
-   for all git/gh operations
+5. Apply any identity overrides from the `required-environment-variables` memory for git/gh operations
 
 ### 5c. Create PR
 1. Create a pull request via `gh pr create`
