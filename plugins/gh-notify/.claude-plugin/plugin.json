@@ -1,0 +1,25 @@
+{
+  "name": "gh-notify",
+  "description": "MCP wiring for gh-notify-mcp GitHub notification triage server",
+  "author": {
+    "name": "butterflyskies"
+  },
+  "license": "MIT OR Apache-2.0",
+  "mcpServers": {
+    "gh-notify": {
+      "type": "stdio",
+      "command": "uv",
+      "args": [
+        "run",
+        "--from",
+        "git+https://github.com/butterflyskies/gh-notify-mcp",
+        "--extra",
+        "mcp",
+        "gh-notify-mcp"
+      ],
+      "env": {
+        "GH_CONFIG_DIR": "${HOME}/.config/gh-butterflysky-ai"
+      }
+    }
+  }
+}

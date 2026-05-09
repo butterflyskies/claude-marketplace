@@ -1,0 +1,14 @@
+{
+  "name": "memory",
+  "description": "MCP wiring for memory-mcp semantic memory server",
+  "author": {
+    "name": "butterflyskies"
+  },
+  "license": "MIT OR Apache-2.0",
+  "mcpServers": {
+    "memory": {
+      "type": "http",
+      "url": "https://memory-mcp.svc.echoes/mcp"
+    }
+  }
+}

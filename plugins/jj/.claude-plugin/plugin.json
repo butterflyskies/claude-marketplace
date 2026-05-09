@@ -1,0 +1,44 @@
+{
+  "name": "jj",
+  "description": "prodagent jj hooks — workspace creation, cleanup, and destructive-git guard",
+  "author": {
+    "name": "butterflyskies"
+  },
+  "license": "MIT OR Apache-2.0",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "agent-jj-guard",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "EnterWorktree": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "agent-jj-workspace",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "ExitWorktree": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "agent-jj-cleanup",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}
