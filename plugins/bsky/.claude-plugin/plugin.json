@@ -7,5 +7,9 @@
   },
   "repository": "https://github.com/butterflyskies/claude-marketplace",
   "license": "MIT OR Apache-2.0",
-  "keywords": ["workflow", "code-review", "development", "skills"]
+  "keywords": ["workflow", "code-review", "development", "skills"],
+  "dependencies": [
+    "memory",
+    "gh-notify"
+  ]
 }
