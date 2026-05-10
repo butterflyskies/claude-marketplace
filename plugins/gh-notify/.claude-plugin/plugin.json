@@ -16,10 +16,7 @@
         "--extra",
         "mcp",
         "gh-notify-mcp"
-      ],
-      "env": {
-        "GH_CONFIG_DIR": "${HOME}/.config/gh-butterflysky-ai"
-      }
+      ]
     }
   }
 }
