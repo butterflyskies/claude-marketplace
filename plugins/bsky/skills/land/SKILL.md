@@ -81,10 +81,10 @@ Skip this phase if gh-notify MCP tools are not available.
 
 ## Phase 6: Milestone rollover
 
-Manage date-based weekly milestones in `butterflyskies/tasks`. The naming convention
+Manage date-based weekly milestones in the tasks repo (see `infrastructure-overview` memory). The naming convention
 is `Friday Focus — Mon DD` (e.g., "Friday Focus — Feb 13").
 
-1. List all open milestones: `gh api repos/butterflyskies/tasks/milestones?state=open`
+1. List all open milestones: `gh api repos/<tasks-repo>/milestones?state=open`
 2. For any milestone whose `due_on` is in the past:
    a. If a newer milestone doesn't already exist, create one for the next Friday:
       - Title: `Friday Focus — <Mon DD>` (e.g., "Friday Focus — Feb 20")
@@ -101,7 +101,7 @@ Skip this phase entirely if no milestones are past due and the current milestone
 
 ## Phase 7: Flight log
 
-Write the day's wins entry in `butterflyskies/flight-log`:
+Write the day's wins entry in the flight-log repo (see `infrastructure-overview` memory):
 1. Clone or pull the repo
 2. Create/update `entries/YYYY-MM-DD.md` for today
 3. Format: H1 date header, then bolded theme lines with bullet-point details underneath

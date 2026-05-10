@@ -278,8 +278,8 @@ If `0` (no rulesets), create them per [references/repo-setup.md](references/repo
 This is a one-time setup — skip on subsequent PRs.
 
 ### 5e. Tracking
-1. Check if a tracking issue exists in `butterflyskies/tasks` for this work
-2. If not, create one: `gh issue create --repo butterflyskies/tasks --title "<work description>"`
+1. Check if a tracking issue exists in the tasks repo (see `infrastructure-overview` memory) for this work
+2. If not, create one: `gh issue create --repo <tasks-repo> --title "<work description>"`
 3. Comment on the tracking issue with the PR link and a brief status update
 4. Assign the issue to the current milestone if one exists
 
