@@ -12,7 +12,9 @@
           {
             "type": "command",
             "command": "${CLAUDE_PLUGIN_ROOT}/scripts/ensure-installed.sh",
-            "timeout": 120
+            "timeout": 120,
+            "async": true,
+            "statusMessage": "Checking prodagent installation..."
           }
         ]
       }
@@ -24,7 +26,8 @@
           {
             "type": "command",
             "command": "agent-jj-guard",
-            "timeout": 5
+            "timeout": 5,
+            "statusMessage": "Checking jj safety..."
           }
         ]
       }
@@ -35,7 +38,8 @@
           {
             "type": "command",
             "command": "agent-jj-workspace",
-            "timeout": 30
+            "timeout": 30,
+            "statusMessage": "Creating jj workspace..."
           }
         ]
       }
@@ -46,7 +50,8 @@
           {
             "type": "command",
             "command": "agent-jj-cleanup",
-            "timeout": 30
+            "timeout": 30,
+            "statusMessage": "Cleaning up jj workspace..."
           }
         ]
       }
