@@ -8,13 +8,10 @@
   "mcpServers": {
     "elgato-keylight": {
       "type": "stdio",
-      "command": "uv",
+      "command": "uvx",
       "args": [
-        "run",
         "--from",
-        "git+https://github.com/butterflyskies/elgato-control-home-automation",
-        "--extra",
-        "mcp",
+        "git+https://github.com/butterflyskies/elgato-control-home-automation[mcp]",
         "elgato-mcp"
       ]
     }
