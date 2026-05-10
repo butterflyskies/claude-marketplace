@@ -5,6 +5,18 @@
     "name": "butterflyskies"
   },
   "license": "MIT OR Apache-2.0",
+  "userConfig": {
+    "gh_config_dir": {
+      "type": "string",
+      "title": "GitHub CLI Config Directory",
+      "description": "Path to the gh CLI config directory for the identity gh-notify should use (e.g. ~/.config/gh)"
+    },
+    "gh_notify_repo": {
+      "type": "string",
+      "title": "gh-notify-mcp Source",
+      "description": "pip-installable source for gh-notify-mcp (default: git+https://github.com/butterflyskies/gh-notify-mcp)"
+    }
+  },
   "mcpServers": {
     "gh-notify": {
       "type": "stdio",
@@ -12,13 +24,13 @@
       "args": [
         "run",
         "--from",
-        "git+https://github.com/butterflyskies/gh-notify-mcp",
+        "${user_config.gh_notify_repo}",
         "--extra",
         "mcp",
         "gh-notify-mcp"
       ],
       "env": {
-        "GH_CONFIG_DIR": "${HOME}/.config/gh-butterflysky-ai"
+        "GH_CONFIG_DIR": "${user_config.gh_config_dir}"
       }
     }
   }

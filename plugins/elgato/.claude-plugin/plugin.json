@@ -5,6 +5,13 @@
     "name": "butterflyskies"
   },
   "license": "MIT OR Apache-2.0",
+  "userConfig": {
+    "elgato_repo": {
+      "type": "string",
+      "title": "Elgato MCP Source",
+      "description": "pip-installable source for elgato-mcp (default: git+https://github.com/butterflyskies/elgato-control-home-automation)"
+    }
+  },
   "mcpServers": {
     "elgato-keylight": {
       "type": "stdio",
@@ -12,7 +19,7 @@
       "args": [
         "run",
         "--from",
-        "git+https://github.com/butterflyskies/elgato-control-home-automation",
+        "${user_config.elgato_repo}",
         "--extra",
         "mcp",
         "elgato-mcp"
