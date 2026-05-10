@@ -8,13 +8,10 @@
   "mcpServers": {
     "gh-notify": {
       "type": "stdio",
-      "command": "uv",
+      "command": "uvx",
       "args": [
-        "run",
         "--from",
-        "git+https://github.com/butterflyskies/gh-notify-mcp",
-        "--extra",
-        "mcp",
+        "git+https://github.com/butterflyskies/gh-notify-mcp[mcp]",
         "gh-notify-mcp"
       ]
     }
