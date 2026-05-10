@@ -12,7 +12,9 @@
           {
             "type": "command",
             "command": "${CLAUDE_PLUGIN_ROOT}/scripts/ensure-installed.sh",
-            "timeout": 120
+            "timeout": 120,
+            "async": true,
+            "statusMessage": "Checking cc-toolgate installation..."
           }
         ]
       }
@@ -24,7 +26,8 @@
           {
             "type": "command",
             "command": "cc-toolgate",
-            "timeout": 5
+            "timeout": 5,
+            "statusMessage": "Validating command..."
           }
         ]
       }
