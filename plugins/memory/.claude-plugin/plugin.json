@@ -9,7 +9,8 @@
     "memory_url": {
       "type": "string",
       "title": "Memory MCP URL",
-      "description": "HTTP endpoint for your memory-mcp server (e.g. https://memory-mcp.example.com/mcp)"
+      "description": "HTTP endpoint for your memory-mcp server (e.g. https://memory-mcp.example.com/mcp)",
+      "required": true
     }
   },
   "mcpServers": {
