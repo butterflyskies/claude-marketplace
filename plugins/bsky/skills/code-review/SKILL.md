@@ -117,7 +117,7 @@ For each finding, output EXACTLY this format:
 - File: `<path>:<line>`
 - Issue: <1-2 sentence description of what's wrong>
 - Impact: <what breaks, and under what conditions>
-- Fix: <concrete code change or approach>
+- Fix: <describe the concrete code change or approach — DO NOT implement it>
 ```
 
 ### Sub-agent B: Design & Maintainability
@@ -168,7 +168,7 @@ For each finding, output EXACTLY this format:
 - File: `<path>:<line>`
 - Issue: <1-2 sentence description of what's wrong>
 - Impact: <what breaks, and under what conditions>
-- Fix: <concrete code change or approach>
+- Fix: <describe the concrete code change or approach — DO NOT implement it>
 ```
 
 ### Sub-agent C: Architecture & Security (model: opus)
@@ -247,7 +247,7 @@ For each finding, output EXACTLY this format:
 - File: `<path>:<line>`
 - Issue: <1-2 sentence description of what's wrong>
 - Impact: <what breaks, and under what conditions>
-- Fix: <concrete code change or approach>
+- Fix: <describe the concrete code change or approach — DO NOT implement it>
 ```
 
 ### Providing context to sub-agents
