@@ -43,6 +43,12 @@
       "license": "MIT OR Apache-2.0"
     },
     {
+      "name": "dione",
+      "source": "./plugins/dione",
+      "description": "Discord MCP channel server — Rust bridge with access control and 21 tools",
+      "license": "MIT OR Apache-2.0"
+    },
+    {
       "name": "bsky-meta",
       "source": "./plugins/bsky-meta",
       "description": "Loadout plugin — installs all butterflyskies plugins via dependencies",
