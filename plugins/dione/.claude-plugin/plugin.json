@@ -1,0 +1,33 @@
+{
+  "name": "dione",
+  "description": "Discord channel for Claude Code — Rust MCP bridge with access control, 21 tools, and admin-gated access queue",
+  "author": {
+    "name": "butterflyskies",
+    "email": "lina@butterflysky.dev"
+  },
+  "repository": "https://github.com/butterflyskies/dione",
+  "license": "MIT OR Apache-2.0",
+  "keywords": ["discord", "channel", "mcp", "bot"],
+  "mcpServers": {
+    "dione": {
+      "type": "stdio",
+      "command": "dione",
+      "args": []
+    }
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/ensure-installed.sh",
+            "timeout": 120,
+            "async": true,
+            "statusMessage": "Checking dione installation..."
+          }
+        ]
+      }
+    ]
+  }
+}
