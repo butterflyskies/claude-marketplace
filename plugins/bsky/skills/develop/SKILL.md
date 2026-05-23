@@ -199,8 +199,9 @@ If the quality agent reports unfixed issues, present them to the user with optio
 
 ## Phase 4: Code review
 
-Invoke the `/code-review` skill with `branch` scope. This runs three parallel sub-agents
-(correctness, design, architecture+security) and produces deduplicated, verified findings.
+Invoke the `/code-review` skill with `branch` scope. This runs parallel sub-agents
+(correctness, design, architecture+security, elegance+idiomacy, test quality) and
+produces deduplicated, verified findings.
 The `/code-review` skill is the single source of truth for review methodology — do not
 duplicate its logic here.
 

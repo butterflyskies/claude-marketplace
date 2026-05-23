@@ -71,13 +71,21 @@ reviewing in logical chunks (by file group or functional area) rather than all a
 
 ## Phase 2: Analyze
 
-Launch all four sub-agents in a **single message** with four parallel Agent tool calls,
+**Language note:** The sub-agent prompts below use Rust-specific examples (iterators,
+`?` operator, `thiserror`, traits, etc.) because that's the primary codebase where this
+skill was developed. When reviewing non-Rust code, map the intent to the equivalent
+idioms in the target language — e.g., Rust's `?` → Python's exception propagation,
+Rust traits → TypeScript interfaces, Rust's ownership model → whatever memory/resource
+management the language provides. The principles are language-agnostic; the examples
+are not.
+
+Launch all five sub-agents in a **single message** with five parallel Agent tool calls,
 each with `run_in_background: true`. This ensures true concurrent execution — launching
 them sequentially wastes time and defeats the purpose of independent analysis. Each agent
 gets the same diff and context but a different analytical lens. The separation ensures
 independent findings — a bug one agent normalizes, another catches. Use **sonnet** for
-sub-agents A and B (mechanical analysis), **opus** for sub-agents C and D (judgment-heavy
-architectural and idiomacy review).
+sub-agents A and B (mechanical analysis), **opus** for sub-agents C, D, and E (judgment-heavy
+architectural, idiomacy, and test quality review).
 
 ### Sub-agent A: Correctness & Safety
 
@@ -321,6 +329,66 @@ For each finding, output EXACTLY this format:
 - Fix: <describe the concrete code change or approach — DO NOT implement it>
 ```
 
+### Sub-agent E: Test Quality (model: opus)
+
+```
+You are reviewing code changes exclusively for test quality — whether tests exist,
+whether they're useful, and whether they're the right kind. You did NOT write this
+code and have NOT seen the implementation process. Precision matters more than count.
+False positives waste verification time and erode trust.
+
+**Test runner awareness:** Check whether the project uses a test runner with
+process-per-test isolation (e.g., `cargo nextest` for Rust, `jest --runInBand` vs
+parallel for JS). If tests run in separate processes, global/static state leakage
+is not a concern — but shared filesystem state still is. If the runner is not
+isolation-aware, flag tests that depend on global state without synchronization.
+For Rust projects, recommend `cargo nextest run` over `cargo test` for CI — it
+provides process isolation and better output.
+
+Review the following changes for:
+
+**Missing test coverage**
+- What tests SHOULD exist for the changed code? Be specific.
+- What's the minimum set of tests that gives maximum coverage?
+- Which need to be unit tests vs integration tests?
+
+**Round-trip / boundary tests**
+- When code writes data through one path and reads through another (e.g., toml_edit
+  writes, serde reads), is there a test that crosses that boundary?
+- When code transforms data (serialize → deserialize, encode → decode), is the
+  round-trip tested end-to-end?
+
+**Test anti-patterns**
+- Tests that reimplement production logic instead of calling it — these prove nothing
+  about the real code
+- Vacuous assertions: `assert!(true)`, `assert_eq!(x, x)`, or assertions that can
+  never fail given the test setup
+- `pub(crate)` or `pub` visibility added to production code solely to make it testable
+  — restructure the code instead of weakening encapsulation
+- Tests that test the framework/library behavior rather than the project's logic
+- Snapshot tests where assertion-based tests would be more precise (or vice versa)
+- Tests that don't exercise their named code path — trace the input through the code
+  and verify it actually hits the branch/condition the test name claims
+
+**Test architecture**
+- Are tests at the right level? (unit for pure logic, integration for IO/cross-module)
+- Could a single integration test replace several shallow unit tests?
+- Is there a test for the most common real-world usage pattern (golden path)?
+- Are error paths tested, not just happy paths?
+
+**What NOT to flag**
+- Missing tests for trivial getters/setters or derived trait impls
+- Missing tests for code that's fully covered by the type system
+- Style preferences in test naming or organization
+
+For each finding, output EXACTLY this format:
+**[P1|P2|P3] <short title>**
+- File: `<path>:<line>`
+- Issue: <description of what test is missing or wrong>
+- Impact: <what bug class goes undetected>
+- Fix: <describe the specific test(s) to write — name, setup, assertions>
+```
+
 ### Providing context to sub-agents
 
 Each sub-agent receives:
@@ -356,7 +424,7 @@ not findings that were real and fixed (those belong in the "previously fixed" co
 
 ## Phase 3: Deduplicate & verify
 
-After all four sub-agents return:
+After all sub-agents return:
 
 1. **Merge findings** — combine all four agents' results, removing duplicates
 2. **Verify each finding** — for every P1 and P2, read the actual code to confirm
