@@ -1,0 +1,199 @@
+---
+name: briefing
+description: "When requested: session-start situational awareness — notifications, PRs, tasks, and due follow-ups."
+---
+
+# /briefing — Situational Awareness
+
+Scan what's happened since last session and present a concise summary. This skill is
+**read-only** — it never modifies anything (except syncing notification state via gh-notify).
+
+If a `required-environment-variables` memory exists (scope: global), read and apply it
+before any git/gh operations.
+
+## Argument handling
+
+`$ARGUMENTS` is optional. If provided, run only the matching phase(s):
+
+| Keyword          | Phase(s) run |
+|------------------|-------------|
+| `notifications`  | 1 only |
+| `prs`            | 2 only |
+| `tasks`          | 3 only |
+| `followups`      | 4 only (report what's due) |
+| `followups run`  | 4 only (execute all due checks) |
+| `followups all`  | 4 only (execute all checks regardless of due date) |
+| `followups <N or text>` | 4 only (execute matching item regardless of due date) |
+| *(empty)*        | All four (Phase 4 reports only) |
+
+Multiple keywords can be combined (e.g. `prs tasks`). Match case-insensitively.
+
+## Phase 1: Notifications
+
+Use the **gh-notify MCP tools** (not raw `gh api`):
+
+1. Call `sync_notifications` to fetch and upsert from GitHub
+2. Call `list_actionable` to get only `[NEW]` and `[TRIAGED]` items
+3. Call `get_stats` for the summary counts
+
+This skips already-acted/dismissed notifications from previous sessions.
+
+- Group actionable items by `reason` (mention, author, comment, ci_activity, assign, etc.)
+- Under each reason heading, list: repo name + title, with status tag (`[NEW]`/`[TRIAGED]`)
+- If no actionable notifications, collapse to: **Notifications: none**
+- After presenting, offer to triage: "Want me to dismiss CI noise or triage any of these?"
+
+## Phase 2: Open PRs
+
+Check open PRs involving the user. If the `required-environment-variables` memory specifies
+multiple identities, search for each:
+
+```bash
+gh search prs --state=open --involves=<identity> --json repository,title,number,url,updatedAt
+```
+
+- Deduplicate by URL
+- For each PR, check CI status (note: `gh pr checks` does not support `--json`):
+  ```bash
+  gh pr checks <number> --repo <owner/repo>
+  ```
+- For each PR, check for recent review comments (last 7 days):
+  ```bash
+  gh api "repos/<owner>/<repo>/pulls/<number>/reviews" --jq '[.[] | select(.submitted_at > "<7_days_ago_ISO>") | {user: .user.login, state: .state, body: .body}]'
+  gh api "repos/<owner>/<repo>/pulls/<number>/comments" --jq '[.[] | select(.updated_at > "<7_days_ago_ISO>") | {user: .user.login, body: .body, path: .path, created_at: .created_at}]'
+  ```
+- Surface unresolved review comments in the PR table output — show reviewer name, comment count, and whether changes were requested
+- If no open PRs, collapse to: **Open PRs: none**
+
+## Phase 3: Tasks & Milestones
+
+From the project tracker (see `infrastructure-overview` memory for repo locations).
+Note: quote the milestones URL to prevent zsh glob expansion on `?`:
+
+```bash
+gh issue list --repo <tasks-repo> --state open --json number,title,milestone,labels,assignees
+gh api 'repos/<tasks-repo>/milestones?state=open'
+```
+
+- Group open issues by milestone
+- Show milestone title, due date, and open/closed counts
+- List unassigned-to-milestone issues separately
+- Highlight anything past due
+- If no open tasks, collapse to: **Tasks: none**
+
+## Phase 4: Follow-ups
+
+Use memory-mcp's `recall` tool to search for periodic follow-ups. If a `periodic-followups`
+memory exists (scope: global), read it. For each active item:
+
+1. Parse `Last checked` date and `Frequency`
+2. Calculate next due date:
+   - weekly = last checked + 7 days
+   - biweekly = last checked + 14 days
+   - monthly = last checked + 30 days
+3. Compare against today's date
+
+### Report mode (`followups` or part of full briefing)
+
+Report due/not-yet-due status only. Offer to run checks:
+"Want me to run the due checks? Use `/briefing followups run` to execute."
+
+### Execute mode (`followups run`, `followups all`, `followups <N or text>`)
+
+- `followups run` — execute checks for all items that are due or overdue
+- `followups all` — execute every active item regardless of due date
+- `followups 1` — execute item #1 regardless of due date
+- `followups serena` — execute items whose title matches (case-insensitive)
+
+For each selected item:
+
+1. **Execute the check** — run the steps described in the item's **How** field (typically
+   `gh` commands). Collect output and interpret:
+   - Has the status changed since last check?
+   - Is there new activity (comments, commits, state changes)?
+   - Is the "Done when" condition now met?
+2. **Report findings** — summarize what changed (or didn't) since last check
+3. **Update `Last checked`** — use memory-mcp's `edit` tool on the `periodic-followups`
+   memory (scope: global) to set today's date
+4. **If "Done when" is met** — ask the user before moving the item to the Completed Items
+   section. Don't move automatically.
+
+## Output format
+
+### Notifications
+
+Show stats summary line first, then group actionable items by reason with status tags.
+Condense related items from the same repo when there are many:
+
+```
+## Notifications (12 actionable / 30 total — 18 previously acted/dismissed)
+
+**mention** (2)
+- [NEW] `owner/repo-a` — Add feature X (PR)
+- [TRIAGED] `owner/repo-b` — Refactor Y (PR)
+
+**author** (5)
+- [NEW] `owner/repo-c` — Add syscall tracer (PR)
+- [NEW] `owner/repo-d` — 3 PRs (config cleanup, ...)
+- ...
+
+**ci_activity** (3)
+- ...
+
+> Dismiss CI noise or triage any of these? (use thread IDs from list_actionable)
+```
+
+### Open PRs
+
+Markdown table with linked PR number, title, repo, CI summary, review status, and last-updated date.
+If a PR has unresolved review comments, add a "Reviews" row beneath it listing reviewer, state, and
+comment count:
+
+```
+## Open PRs
+
+| PR | Repo | CI | Reviews | Updated |
+|----|------|----|---------|---------|
+| [#42](url) Add feature X | owner/repo-a | all pass | — | Feb 19 |
+| [#16](url) Add system event parser | owner/repo-b | all pass | reviewer: changes_requested (3 comments) | Mar 5 |
+| [#9](url) Track disconnect events | owner/repo-c | pass | — | Jan 6 |
+```
+
+For PRs with review comments, briefly list the key concerns below the table under a
+`### Review comments needing attention` subheading, grouped by PR.
+
+### Tasks & Milestones
+
+Group by milestone, showing due date and counts, then list issue numbers and titles.
+Unassigned issues in a separate group:
+
+```
+## Tasks & Milestones
+
+**Friday Focus — Feb 27** (due Feb 26, 14 open / 0 closed)
+- #69 Design adversarial code review sub-agent
+- #68 Gossamer — system observability toolbox
+- ...
+
+**Unassigned to milestone** (N issues)
+- #70 Track upstream Serena memory issues
+- ...
+```
+
+### Follow-ups
+
+Per-item status with last-checked date and next-due date:
+
+```
+## Follow-ups
+
+**Serena PR #1007 — Global Memories** (weekly)
+- Last checked: 2026-02-19
+- Next due: 2026-02-26
+- Not yet due. Use `/briefing followups 1` to run now.
+```
+
+### General rules
+
+- Empty sections get a single "none" line, not omitted entirely
+- Keep it scannable — no prose paragraphs, just structured lists and tables
