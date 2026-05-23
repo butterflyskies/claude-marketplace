@@ -71,13 +71,13 @@ reviewing in logical chunks (by file group or functional area) rather than all a
 
 ## Phase 2: Analyze
 
-Launch all three sub-agents in a **single message** with three parallel Agent tool calls,
+Launch all four sub-agents in a **single message** with four parallel Agent tool calls,
 each with `run_in_background: true`. This ensures true concurrent execution — launching
 them sequentially wastes time and defeats the purpose of independent analysis. Each agent
 gets the same diff and context but a different analytical lens. The separation ensures
 independent findings — a bug one agent normalizes, another catches. Use **sonnet** for
-sub-agents A and B (mechanical analysis), **opus** for sub-agent C (judgment-heavy
-architectural review).
+sub-agents A and B (mechanical analysis), **opus** for sub-agents C and D (judgment-heavy
+architectural and idiomacy review).
 
 ### Sub-agent A: Correctness & Safety
 
@@ -250,6 +250,77 @@ For each finding, output EXACTLY this format:
 - Fix: <describe the concrete code change or approach — DO NOT implement it>
 ```
 
+### Sub-agent D: Elegance & Idiomacy (model: opus)
+
+```
+You are reviewing code changes for idiomatic language use and elegance. You did NOT
+write this code and have NOT seen the implementation process — only the diff and
+the project structure. Precision matters more than count. Every genuine finding at
+any priority level (P1, P2, or P3) is valuable and will be addressed. False positives
+waste verification time and erode trust in the review process — a finding that isn't
+real is worse than a finding you didn't report.
+
+Review the following changes for:
+
+**Idiomatic language use**
+- Is the code written in the style that experienced practitioners of this language
+  would recognize and expect? Not "clever" — natural.
+- Are language features being used as intended? (e.g., in Rust: iterators over manual
+  loops, `?` over explicit match-on-Result, `impl From` over manual conversion
+  functions, exhaustive matching over catch-all arms, newtypes over primitive obsession)
+- Are there patterns that work but fight the language? (e.g., index-based iteration
+  where `for item in collection` works, manual lifetime annotations where elision
+  applies, unnecessary clones where borrows suffice, Arc<Mutex<>> where channels or
+  message passing fit better)
+- Does error handling follow the ecosystem's conventions? (e.g., thiserror for library
+  errors, anyhow for application errors, not both in the same crate without reason)
+
+**Expressiveness**
+- Could a block of code be replaced by a standard library or well-known crate method
+  that does the same thing? (e.g., `Option::map` over if-let-then-Some, `Iterator::any`
+  over a loop-with-flag, `Entry` API over contains-then-insert)
+- Are there chains of transformations that would read more clearly as iterator pipelines
+  or combinators?
+- Are there nested conditionals that could be flattened with early returns or guard
+  clauses?
+- Is there unnecessary intermediate state (mutable variables used once, temp collections
+  built just to iterate)?
+
+**Type design**
+- Do types encode invariants, or do they rely on runtime checks for things the type
+  system could guarantee? (e.g., separate structs for validated vs unvalidated data,
+  enums over boolean flags, NonZero types where zero is invalid)
+- Are generic bounds minimal? Over-constrained generics limit reuse; under-constrained
+  ones push errors to call sites.
+- Are trait implementations missing that would make the types more composable?
+  (Display, From/Into, Default, AsRef where natural)
+
+**Consistency with surrounding code**
+- If the codebase has an established style for similar operations, does the new code
+  follow it? Divergence should be intentional improvement, not accidental inconsistency.
+- If the change introduces a better pattern than what exists, note it as a potential
+  follow-up migration — but don't block the PR on cleaning up pre-existing code.
+
+**Clarity**
+- Would a competent practitioner of this language understand the intent without comments?
+  If not, the code structure is the problem — adding a comment is the wrong fix.
+- Are names precise? A name like `process` or `handle` or `data` is a code smell.
+  Names should distinguish this thing from other things of the same type.
+- Is the code's structure aligned with its logical structure? (e.g., related operations
+  grouped together, guard clauses before main logic, error paths before happy paths)
+
+This reviewer is NOT about style preferences, formatting, or bikeshedding. It's about
+whether the code is using the language well — the way you'd want to find it if you were
+debugging at 2am six months from now.
+
+For each finding, output EXACTLY this format:
+**[P1|P2|P3] <short title>**
+- File: `<path>:<line>`
+- Issue: <1-2 sentence description of what's wrong>
+- Impact: <what breaks, and under what conditions>
+- Fix: <describe the concrete code change or approach — DO NOT implement it>
+```
+
 ### Providing context to sub-agents
 
 Each sub-agent receives:
@@ -285,9 +356,9 @@ not findings that were real and fixed (those belong in the "previously fixed" co
 
 ## Phase 3: Deduplicate & verify
 
-After all three sub-agents return:
+After all four sub-agents return:
 
-1. **Merge findings** — combine all three agents' results, removing duplicates
+1. **Merge findings** — combine all four agents' results, removing duplicates
 2. **Verify each finding** — for every P1 and P2, read the actual code to confirm
    the issue is real. LLM reviewers hallucinate findings; do not pass through
    unverified claims. Drop any finding you cannot confirm by reading the code.
@@ -308,6 +379,11 @@ After all three sub-agents return:
    carried forward into sub-agent prompts in subsequent rounds (see Phase 2,
    "Providing context to sub-agents") so agents do not re-flag the same non-issues.
    Include dismissed findings in the report's Summary section for transparency.
+5. **File issues for pre-existing findings** — if a finding is real but dismissed
+   because it's a pre-existing pattern (not introduced by this PR), file a GitHub
+   issue documenting the problem and affected code locations. These are real issues
+   discovered during review — capturing them ensures they don't get lost. Include
+   the issue URLs in the report's Dismissed section.
 
 ## Phase 4: Report
 
