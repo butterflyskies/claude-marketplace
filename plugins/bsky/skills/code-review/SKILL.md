@@ -71,13 +71,13 @@ reviewing in logical chunks (by file group or functional area) rather than all a
 
 ## Phase 2: Analyze
 
-Launch all four sub-agents in a **single message** with four parallel Agent tool calls,
+Launch all five sub-agents in a **single message** with five parallel Agent tool calls,
 each with `run_in_background: true`. This ensures true concurrent execution — launching
 them sequentially wastes time and defeats the purpose of independent analysis. Each agent
 gets the same diff and context but a different analytical lens. The separation ensures
 independent findings — a bug one agent normalizes, another catches. Use **sonnet** for
-sub-agents A and B (mechanical analysis), **opus** for sub-agents C and D (judgment-heavy
-architectural and idiomacy review).
+sub-agents A, B, and E (mechanical analysis and test quality), **opus** for sub-agents C
+and D (judgment-heavy architectural and idiomacy review).
 
 ### Sub-agent A: Correctness & Safety
 
@@ -321,6 +321,70 @@ For each finding, output EXACTLY this format:
 - Fix: <describe the concrete code change or approach — DO NOT implement it>
 ```
 
+### Sub-agent E: Test Quality (model: sonnet)
+
+```
+You are reviewing code changes exclusively for test quality. You did NOT write this
+code. Your ONLY focus is whether the tests actually prove what they claim to prove.
+Do not review production code for correctness, design, or security — other agents
+handle that.
+
+Review ALL tests in the diff (new and modified) for:
+
+**Vacuous tests**
+- Does the test actually exercise the code path it names? Could the test pass even
+  if the feature was completely broken?
+- Would removing the assertion still cause the test to pass? If yes, the test is
+  vacuous.
+- Tests that compare a value against itself, assert `true`, or check trivially-true
+  conditions are vacuous.
+
+**Named path coverage**
+- Trace each test's input through the production code. Does it actually reach the
+  code path the test name implies?
+- If the error fires earlier than intended (e.g., validation rejects before reaching
+  the business logic), the named path is untested even though the test passes.
+
+**Missing edge cases**
+- For each code path added or changed: what inputs aren't covered? Empty collections,
+  boundary values (0, 1, max), error paths, concurrent access patterns.
+- For each match/branch in the production code: is there a test exercising each arm?
+- Are there negative tests — tests for what should NOT happen? (e.g., unauthorized
+  access is rejected, invalid input is caught, duplicate operations are idempotent)
+
+**Test doubles vs production constraints**
+- If mocks, stubs, or test helpers are used: do they enforce the same invariants
+  production code does? Dimension checks, format validation, size limits — if
+  production enforces it, the test double must too.
+- Are test fixtures representative of real data, or do they use trivial values that
+  skip production validation?
+
+**Assertion completeness**
+- Does the test check return values, side effects, AND state changes? A test that
+  only checks the return value misses mutations.
+- For error-path tests: does it verify the specific error type/message, or just that
+  "an error occurred"?
+- For serialization tests: does it pin the exact wire format (snapshot test), or just
+  check a single field?
+
+**Chunk/batch boundary tests**
+- When code processes items in batches: does the test compare an item batched WITH
+  OTHERS against standalone? Comparing a solo-batch item against standalone is
+  vacuously true.
+
+**Pruning/eviction/lifecycle tests**
+- When code has capacity limits, TTLs, or cleanup: is there a test that exceeds the
+  limit and verifies eviction behavior? Not just "item is added" but "oldest item is
+  removed when capacity is exceeded."
+
+For each finding, output EXACTLY this format:
+**[P1|P2|P3] <short title>**
+- File: `<path>:<line>`
+- Issue: <1-2 sentence description of what's wrong>
+- Impact: <what breaks, and under what conditions>
+- Fix: <describe the concrete test to add or fix — DO NOT implement it>
+```
+
 ### Providing context to sub-agents
 
 Each sub-agent receives:
@@ -356,9 +420,9 @@ not findings that were real and fixed (those belong in the "previously fixed" co
 
 ## Phase 3: Deduplicate & verify
 
-After all four sub-agents return:
+After all five sub-agents return:
 
-1. **Merge findings** — combine all four agents' results, removing duplicates
+1. **Merge findings** — combine all five agents' results, removing duplicates
 2. **Verify each finding** — for every P1 and P2, read the actual code to confirm
    the issue is real. LLM reviewers hallucinate findings; do not pass through
    unverified claims. Drop any finding you cannot confirm by reading the code.
@@ -384,6 +448,29 @@ After all four sub-agents return:
    issue documenting the problem and affected code locations. These are real issues
    discovered during review — capturing them ensures they don't get lost. Include
    the issue URLs in the report's Dismissed section.
+
+## Phase 3.5: Fix & re-review (autonomous loop)
+
+If any P1, P2, or P3 findings survived verification in Phase 3:
+
+1. **Fix all findings** — implement the concrete fixes described in each finding.
+   Do not ask the user which findings to address. Fix all of them.
+2. **Commit the fixes** — create a new commit with a clear message describing what
+   was fixed (e.g., "fix: address PR #N review findings").
+3. **Re-run Phase 2** with `--since <previous-commit>` to get incremental review of
+   only the fix commits. Include the prior findings as "previously fixed" context so
+   sub-agents can verify fixes and check for regressions.
+4. **Repeat** — if the incremental review produces new findings, fix those and re-run.
+   Continue until a review round returns PASS (zero findings).
+
+This loop is autonomous — no user intervention between rounds. The user sees the
+final clean result, not each intermediate round. Each round should push the fix
+commit so the PR reflects the full review history.
+
+**Exit conditions:**
+- PASS — zero findings. Proceed to Phase 4 (Report).
+- Stalemate — a finding cannot be fixed without changing the design intent. Report
+  it as deferred with rationale and proceed to Phase 4.
 
 ## Phase 4: Report
 
