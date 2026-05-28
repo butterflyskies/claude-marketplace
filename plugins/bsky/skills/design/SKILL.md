@@ -185,6 +185,19 @@ Work through these with the user collaboratively:
 - **Data model**: what are the key entities and relationships?
 - **Integration points**: how do components communicate? What protocols?
 - **Technology choices**: languages, frameworks, infrastructure — and why?
+- **Type-driven design**: what invariants should the type system enforce? Prefer
+  wrapper types over raw primitives (Rust newtypes, TypeScript branded types, Python
+  `NewType`), interfaces/traits over ad-hoc patterns, and standard conversion traits
+  at boundaries (Rust `From`/`Into`, Python `__init__` overloads, TS type guards) over
+  manual transformation at each call site. If a rule can be structural
+  (compiler/type-checker-enforced), it should be — runtime checks are for things the
+  type system genuinely can't express.
+- **Concurrency: prefer lock-free over locks.** For shared state, default to atomic
+  operations and lock-free structures (Rust `ArcSwap`/atomics, Go channels, Java
+  `AtomicReference`, JS/TS `SharedArrayBuffer` + Atomics). Mutexes are a last resort
+  for serializing side effects (IO, file writes), not for protecting data reads.
+  Message passing over shared mutable state. If two components need to coordinate,
+  they should talk through a channel, not share a lock.
 
 For each significant decision, note it for an ADR (written during `/develop` Phase 1.5,
 or written here if the user prefers — ask).
