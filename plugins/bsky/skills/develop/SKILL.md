@@ -199,8 +199,9 @@ If the quality agent reports unfixed issues, present them to the user with optio
 
 ## Phase 4: Code review
 
-Invoke the `/code-review` skill with `branch` scope. This runs three parallel sub-agents
-(correctness, design, architecture+security) and produces deduplicated, verified findings.
+Invoke the `/code-review` skill with `branch` scope. This runs five parallel sub-agents
+(correctness, design, architecture+security, idiomacy, test quality) and produces
+deduplicated, verified findings.
 The `/code-review` skill is the single source of truth for review methodology — do not
 duplicate its logic here.
 
@@ -211,8 +212,9 @@ duplicate its logic here.
 The code-review skill will post findings to the PR if one exists, or display in-session.
 Collect the findings from the review output.
 
-If there are any findings (P1, P2, or P3), present them to the user, then proceed to
-Phase 4.5. All severity levels are addressed — P3 is a priority signal, not a skip signal.
+If there are any findings (P1, P2, or P3), proceed directly to Phase 4.5 — do not wait
+for user approval to start fixing. All severity levels are addressed autonomously.
+P3 is a priority signal, not a skip signal.
 If there are zero findings, skip to Phase 5.
 
 ## Phase 4.5: Fix and re-review (iterate until clean)
@@ -236,10 +238,11 @@ When Phase 4 produces findings:
    Record the HEAD commit SHA before each review round so you can pass it as `--since`
    to the next round.
 
-4. **Loop**: if the re-review produces new P1 or P2 findings, repeat from step 1.
-   Present each iteration's findings to the user.
+4. **Loop autonomously**: if the re-review produces new findings at any severity,
+   repeat from step 1. Do not ask the user between rounds — fix all findings and
+   re-review until clean. Each round pushes a commit so the PR shows the full history.
 
-**Circuit breaker**: if 3 iterations haven't converged to a clean review, stop and
+**Circuit breaker**: if 5 iterations haven't converged to a clean review, stop and
 present the remaining findings to the user. Something structural needs human judgment.
 
 ## Phase 5: Land
