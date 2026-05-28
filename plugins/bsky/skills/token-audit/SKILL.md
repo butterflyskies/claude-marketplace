@@ -9,43 +9,65 @@ Read session stats and surface token economics: what this session costs at API r
 how fast the budget is burning, and when limits will hit. Useful for budget-aware
 operation and understanding the value gap between subscription and API pricing.
 
+All math runs in a companion script (`scripts/token-audit.py`) — never inline math
+in the conversation, because that requires permission prompts every time.
+
 ## Arguments
 
 `$ARGUMENTS` is optional:
 
 | Input | Action |
 |-------|--------|
-| *(empty)* | Full report: snapshot + burn rate + projections |
+| *(empty)* or `full` | Full report: snapshot + projections + warnings |
 | `snapshot` | Current stats only, no projections |
-| `project` | Projections only (when will limits hit?) |
-| `history` | Compare against previous sessions if stats are available |
+| `project` | Projections + warnings only |
+| `bootstrap` | Print statusline setup instructions |
 
-## Phase 1: Read current stats
-
-Read `/tmp/claude-session-stats.json`. The file is written by the statusline hook on
-every turn. Extract via `jq`:
+## Phase 1: Run the script
 
 ```bash
-jq '{
-  context_pct: .input.context_window.used_percentage,
-  rate_5h_pct: .input.rate_limits.five_hour.used_percentage,
-  rate_7d_pct: .input.rate_limits.seven_day.used_percentage,
-  rate_5h_resets: .input.rate_limits.five_hour.resets_at,
-  rate_7d_resets: .input.rate_limits.seven_day.resets_at,
-  cost_usd: .input.cost.total_cost_usd,
-  duration_ms: .input.cost.total_duration_ms,
-  api_duration_ms: .input.cost.total_api_duration_ms,
-  model: .input.model.display_name,
-  cache_read: .input.context_window.current_usage.cache_read_input_tokens,
-  cache_create: .input.context_window.current_usage.cache_creation_input_tokens,
-  input_tokens: .input.context_window.current_usage.input_tokens,
-  output_tokens: .input.context_window.current_usage.output_tokens
-}' /tmp/claude-session-stats.json
+~/.claude/plugins/<resolved>/skills/token-audit/scripts/token-audit.py <mode>
 ```
 
-## Phase 2: Calculate API-equivalent cost
+The exact path depends on where the marketplace plugin is installed. The skill
+loader sets `$CLAUDE_PLUGIN_ROOT` or similar — use the script path relative to
+this SKILL.md's directory.
 
-Apply current Anthropic API pricing for the detected model:
+Environment variables the script reads:
+- `TOKEN_AUDIT_STATS` — path to stats file (default: `/tmp/claude-session-stats.json`)
+- `TOKEN_AUDIT_TIER` — subscription tier USD/month (default: `100`)
+
+## Phase 2: Handle bootstrap case
+
+If the script outputs the bootstrap instructions (because the stats file is missing),
+relay them to the user. The user needs to set up a statusline hook that dumps the
+input blob to `/tmp/claude-session-stats.json` on every turn.
+
+The minimal statusline script the bootstrap suggests:
+
+```bash
+#!/usr/bin/env bash
+input=$(cat)
+echo "$input" | jq '{ input: (. // null), updated: now | todate }' \
+  > /tmp/claude-session-stats.json
+echo "$input" | jq -r '.model.display_name // "claude"'
+```
+
+If the user already has a custom statusline, they just need to add the `jq` line
+to it.
+
+## Phase 3: Relay the output
+
+The script emits markdown. If invoked from a Discord channel, post the output
+verbatim. Otherwise print to the terminal.
+
+For Discord posting, prefer the channel where the request came in. If the request
+came from a cron or autonomous trigger, post to `#ari-ops`.
+
+## Pricing reference (for the human reader)
+
+The script's calculations are based on the published Anthropic API rates as of
+2026-05. Update the script if rates change.
 
 **Opus 4.6 / Opus 4.7:**
 - Input: $15/M tokens
@@ -65,68 +87,23 @@ Apply current Anthropic API pricing for the detected model:
 - Cache read: $0.10/M tokens
 - Cache creation: $1.25/M tokens
 
-The `cost.total_cost_usd` field in the stats is the internal cost metric. Calculate
-the subscription-to-API multiplier: API-equivalent cost ÷ subscription tier cost.
+The script does NOT compute these rates from scratch — it relies on the
+`cost.total_cost_usd` field that Claude Code itself reports in the statusline
+input, which already reflects current pricing.
 
-## Phase 3: Burn rate and projections
+## Warnings
 
-Calculate:
-
-- **Burn rate**: `cost_usd ÷ (duration_ms / 3,600,000)` = $/hour
-- **Time to 5h limit**: `(100 - rate_5h_pct) × (session_hours / rate_5h_pct)` = hours remaining
-- **Time to 7d limit**: same formula with 7d rate
-- **Reset times**: convert `resets_at` (unix epoch) to local time via `date -d @<epoch>`
-- **Cache efficiency**: `cache_read ÷ (cache_read + cache_create + input_tokens) × 100`
-- **Monthly projection**: burn rate × 24 × 30 = $/month at this rate sustained
-
-Flag warnings:
-- **5h rate > 80%**: approaching 5h ceiling
-- **7d rate > 90%**: close to weekly limit
-- **Context > 70%**: compaction territory
-- **Cache efficiency < 50%**: cache misses dominating, expensive turn
-
-## Phase 4: Output
-
-Format as a compact dashboard. Post to the requesting channel if invoked from Discord,
-or print to terminal otherwise.
-
-```
-## Token Audit — {timestamp}
-
-| Metric | Value |
-|--------|-------|
-| Model | {display_name} |
-| Context window | {pct}% ({tokens}k / 1M) |
-| 5h rate limit | {pct}% (resets {local_time}) |
-| 7d rate limit | {pct}% (resets {local_time}) |
-| Session cost | ${cost} |
-| Burn rate | ${rate}/hr |
-| Cache hit rate | {pct}% |
-| API-equivalent | ~${monthly}/mo at this rate |
-| Subscription tier | ${tier}/mo |
-| Multiplier | {x}x |
-
-### Projections
-- 5h limit: {hours}h at current rate
-- 7d limit: {hours}h at current rate
-- Context compaction: ~{hours}h at current rate
-
-### Warnings
-{any flags from Phase 3, or "none"}
-```
-
-## Modes
-
-- **snapshot**: skip Phase 3 projections, just print the snapshot table
-- **project**: skip the snapshot table, just print projections + warnings
-- **history**: read any prior `/tmp/claude-session-stats-history-*.json` files if they
-  exist and compare current session against previous ones. If no history files exist,
-  fall back to full report mode and note that history is empty.
+The script flags:
+- **5h rate > 80%** — approaching ceiling
+- **7d rate > 90%** — close to weekly limit
+- **Context > 70%** — compaction territory
+- **Cache hit < 50%** (when there's meaningful cache traffic) — cache misses dominating
 
 ## Notes
 
 - The stats file is rewritten on every turn — the snapshot reflects the most recent
   statusline render, not necessarily the current moment.
-- Subscription tier defaults to $100/mo (Max). For other tiers (Pro $20, Team), the
-  multiplier will change but the per-session cost stays the same.
+- The 7d limit projection compares against session duration, not wall-clock time.
+  For long-running sessions across days, the projection is conservative (assumes
+  current burn rate continues).
 - This skill is read-only and does not call any external APIs.
