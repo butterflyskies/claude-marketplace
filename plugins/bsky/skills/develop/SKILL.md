@@ -199,9 +199,8 @@ If the quality agent reports unfixed issues, present them to the user with optio
 
 ## Phase 4: Code review
 
-Invoke the `/code-review` skill with `branch` scope. This runs five parallel sub-agents
-(correctness, design, architecture+security, idiomacy, test quality) and produces
-deduplicated, verified findings.
+Invoke the `/code-review` skill with `branch` scope. It runs parallel sub-agents and
+produces deduplicated, verified findings.
 The `/code-review` skill is the single source of truth for review methodology — do not
 duplicate its logic here.
 
@@ -285,6 +284,49 @@ This is a one-time setup — skip on subsequent PRs.
 2. If not, create one: `gh issue create --repo <tasks-repo> --title "<work description>"`
 3. Comment on the tracking issue with the PR link and a brief status update
 4. Assign the issue to the current milestone if one exists
+
+## Phase 6: Retrospective
+
+After landing, review what happened and feed learnings back into the process.
+This phase is what closes the loop — without it, the same gaps recur.
+
+### 6a. Self-improvement (this skill)
+
+Ask: did the review-fix cycle reveal a gap in the develop workflow itself?
+
+Examples:
+- Review found a class of bug that Phase 2 (implementation) should have caught →
+  add a check to the implementation sub-agent prompt
+- Review found missing tests that Phase 3 (quality) should have flagged →
+  strengthen quality sub-agent's test verification
+- Fix iterations took too long because the plan was under-specified →
+  add a planning checkpoint for that scenario
+
+If yes, update this skill's SKILL.md directly. Commit with the PR if possible,
+or as a follow-up.
+
+### 6b. Left-shifted improvement (upstream skills)
+
+Ask: did the review-fix cycle reveal a gap in `/design` or `/code-review`?
+
+Examples:
+- Review found an architectural issue that `/design` Phase 3 should have
+  surfaced → update the design skill's architectural checklist
+- Review consistently catches a pattern that should be a `/code-review`
+  sub-agent heuristic → update the code-review skill or `code-review-patterns` memory
+- A new type of finding emerged that no existing reviewer covers →
+  add a reviewer or expand an existing one
+
+If yes, update the upstream skill. This is how the process improves: the
+last skill in the chain (review) feeds corrections backward to the skills
+that should have caught the issue earlier.
+
+### 6c. Pattern capture
+
+If the review produced verified P1 or P2 findings that reveal a **recurring pattern**
+(not a one-off bug), update the `code-review-patterns` memory (scope: global).
+This is delegated to `/code-review`'s Phase 6 when invoked through develop, but
+verify it happened — if the review skill skipped it, do it here.
 
 ## Language detection
 

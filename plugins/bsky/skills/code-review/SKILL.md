@@ -71,6 +71,14 @@ reviewing in logical chunks (by file group or functional area) rather than all a
 
 ## Phase 2: Analyze
 
+**Language note:** The sub-agent prompts below use Rust-specific examples (iterators,
+`?` operator, `thiserror`, traits, etc.) because that's the primary codebase where this
+skill was developed. When reviewing non-Rust code, map the intent to the equivalent
+idioms in the target language — e.g., Rust's `?` → Python's exception propagation,
+Rust traits → TypeScript interfaces, Rust's ownership model → whatever memory/resource
+management the language provides. The principles are language-agnostic; the examples
+are not.
+
 Launch all five sub-agents in a **single message** with five parallel Agent tool calls,
 each with `run_in_background: true`. This ensures true concurrent execution — launching
 them sequentially wastes time and defeats the purpose of independent analysis. Each agent
@@ -545,19 +553,47 @@ durable destination.
 
 Always tell the user where the review was posted (PR URL, issue URL, or "displayed in-session").
 
-## Phase 6: Learn (optional)
+## Phase 6: Learn
 
-If the review produced P1 or P2 findings that reveal a **pattern** (not just a one-off bug),
-update the `code-review-patterns` memory in memory-mcp (scope: global):
+Every review is a learning opportunity. This phase feeds findings back into the
+process so the same gaps don't recur.
+
+### 6a. Pattern capture
+
+If the review produced P1 or P2 findings that reveal a **recurring pattern** (not
+just a one-off bug), update the `code-review-patterns` memory in memory-mcp
+(scope: global):
 
 - New pattern: what to look for, why it matters, example from this review
 - Refinement: if an existing pattern helped catch something, note the confirmation
 - Removal: if a pattern consistently produces false positives, remove it
 
-This is the feedback loop — each review makes future reviews better.
+Only update patterns for findings that were **verified** in Phase 3.
 
-Only update patterns for findings that were **verified** in Phase 3. Do not add
-speculative patterns from unconfirmed findings.
+### 6b. Skill self-improvement
+
+Ask: did this review reveal a gap in the review process itself?
+
+- Did a sub-agent consistently miss a class of issue? → strengthen its prompt
+- Did a finding type emerge that no existing reviewer covers? → add it to the
+  relevant sub-agent, or propose a new one
+- Did false positives cluster around a specific check? → refine or remove it
+- Did the severity definitions cause miscategorization? → adjust
+
+If yes, update this skill's SKILL.md. The review skill should get sharper with
+every use, not just accumulate patterns in memory.
+
+### 6c. Left-shifted feedback
+
+Ask: should an upstream skill (`/design`, `/develop`) have caught this?
+
+- Architectural issue that design should have surfaced → flag for design skill update
+- Implementation gap that the develop planning phase should have specified → flag
+  for develop skill update
+
+When invoked standalone (not through `/develop`), note left-shifted feedback in the
+review output. When invoked through `/develop`, the develop skill's Phase 6 handles
+propagation.
 
 ## Configuration
 
