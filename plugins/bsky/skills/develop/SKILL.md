@@ -353,6 +353,10 @@ on the Agent tool to set each sub-agent's model explicitly.
 
 ## Guidelines
 
+- **Never push without review.** Every push — implementation, fix, refactor — goes
+  through review-fix-review before being declared "ready." No exceptions, no "it's
+  just a small change." The review is what makes it ready, not your judgment that
+  it looks fine. This is a hard gate, not a suggestion.
 - **Sub-agents are disposable context** — don't hesitate to spawn them. The cost is
   tokens, not your coordinator context window.
 - **Fail fast** — if Phase 1 reveals the task is unclear, stop and ask. Don't send
@@ -361,3 +365,7 @@ on the Agent tool to set each sub-agent's model explicitly.
   reading the relevant code yourself before presenting to the user.
 - **No gold-plating** — implement what was asked, nothing more. If you see an improvement
   opportunity, mention it; don't do it.
+- **Use the skills.** Don't hand-roll agent prompts that replicate what `/develop` or
+  `/code-review` already codify. The skills encode the process; bespoke prompts
+  drift from it. If a skill is missing something, update the skill — don't work
+  around it.
