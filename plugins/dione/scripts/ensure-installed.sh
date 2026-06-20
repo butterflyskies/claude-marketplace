@@ -1,10 +1,5 @@
 #!/bin/sh
-# Ensures dione is installed and available on PATH.
-# Called as a SessionStart hook — installs from crates.io if missing.
-
-if command -v dione >/dev/null 2>&1; then
-  exit 0
-fi
-
-echo "dione not found, installing from crates.io..." >&2
-cargo install dione --locked 2>&1
+# Ensures dione is installed and up-to-date.
+# Called as a SessionStart hook — installs or updates from crates.io.
+# cargo install no-ops (~1-2s) when already at latest version.
+cargo install dione --locked 2>&1 || true

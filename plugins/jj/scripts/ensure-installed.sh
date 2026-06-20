@@ -1,4 +1,5 @@
 #!/bin/sh
-command -v agent-jj >/dev/null 2>&1 && exit 0
-echo "Installing agent-jj..." >&2
-cargo install --locked agent-jj 2>&1
+# Ensures agent-jj is installed and up-to-date.
+# Called as a SessionStart hook — installs or updates from crates.io.
+# cargo install no-ops (~1-2s) when already at latest version.
+cargo install agent-jj --locked 2>&1 || true
