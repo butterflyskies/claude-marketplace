@@ -24,6 +24,7 @@ before any git/gh operations.
 | `--max-rounds <N>` | `5` | Maximum review-fix iterations before stopping |
 | `--min-severity <level>` | `P3` | Fix findings at this level and above (`P1`, `P2`, or `P3`) |
 | `--fix-model <model>` | `sonnet` | Model for fix agents (`sonnet` or `opus`) |
+| `--standards <memory-ref>` | auto-detect | Load coding standards as context for review and fix agents. Auto-detects `coding-standards-<repo>` from collective-conscious if not specified. |
 | *(bare text)* | — | Passed through to `/code-review` as scope (e.g., `branch`, `pr`, `files src/**`) |
 
 ### Argument parsing
@@ -63,12 +64,29 @@ Determine what to review and establish the working state.
    ```bash
    git rev-parse HEAD
    ```
-5. **Log the configuration**:
+5. **Load coding standards** — these are passed to review and fix agents as context:
+   - If `--standards <memory-ref>` was provided, load that specific memory:
+     ```
+     recall query: "<memory-ref>", scope: "shared"
+     ```
+   - Otherwise, auto-detect from the repo name:
+     ```bash
+     REPO_NAME=$(basename "$(git rev-parse --show-toplevel)")
+     ```
+     ```
+     recall query: "coding-standards-${REPO_NAME}", scope: "shared"
+     ```
+   - If recall returns a match (distance < 0.42), store its content as `$STANDARDS`
+     for use in Phases 2 and 3.
+   - If no standards are found, `$STANDARDS` is empty — review and fix proceed
+     with general code quality only. Log: `Standards: none found (no coding-standards-<repo> in collective-conscious)`
+6. **Log the configuration**:
    ```
    Target: PR #42 (owner/repo) | branch: feat/thing
    Max rounds: 5
    Min severity: P3
    Fix model: sonnet
+   Standards: coding-standards-my-repo (or: <explicit ref> | none)
    ```
 
 ## Phase 2: Review round
@@ -86,6 +104,20 @@ Where `<resolved-scope>` is:
 - `pr <number>` if reviewing a PR
 - `branch` if reviewing a branch
 - (empty) if reviewing uncommitted changes
+
+### Standards context for review
+
+If `$STANDARDS` is non-empty, pass the loaded coding standards as additional context
+to the `/code-review` invocation. Review agents should evaluate the diff against both
+general code quality AND the project-specific standards. Include the standards in the
+review prompt preamble:
+
+```
+The following project coding standards apply to this review. Evaluate findings
+against these standards in addition to general code quality:
+
+<$STANDARDS content>
+```
 
 ### Subsequent rounds
 
@@ -121,8 +153,9 @@ files that have multiple findings):
 1. **Dispatch a fix agent** with the finding details. Use the `Agent` tool:
    - Model: `--fix-model` value (default: sonnet)
    - Prompt includes: the finding (severity, file, line, issue, impact, fix),
-     the project conventions, and the instruction to make the minimal change
-     that resolves the finding without altering design intent
+     the project conventions, the loaded `$STANDARDS` (if any), and the
+     instruction to make the minimal change that resolves the finding without
+     altering design intent
    - The agent reads the relevant code, implements the fix, and verifies it
      compiles/passes lint
 
@@ -160,13 +193,17 @@ Finding:
 
 Project conventions: <from CLAUDE.md / memory-mcp>
 
+Project coding standards:
+<$STANDARDS content, or "No project-specific standards loaded." if empty>
+
 Instructions:
 1. Read the file around the specified line to understand context
 2. Implement the fix described above — minimal change, preserve design intent
-3. If the fix requires changes in other files (e.g., callers), make those too
-4. Run the project's formatter (cargo fmt / prettier / etc.) on changed files
-5. Verify the fix compiles: run the build command but NOT the full test suite
-6. If you cannot resolve this finding without changing the design intent, report
+3. Ensure the fix conforms to the project coding standards above (if provided)
+4. If the fix requires changes in other files (e.g., callers), make those too
+5. Run the project's formatter (cargo fmt / prettier / etc.) on changed files
+6. Verify the fix compiles: run the build command but NOT the full test suite
+7. If you cannot resolve this finding without changing the design intent, report
    that clearly — do not force a bad fix
 
 Do NOT fix other issues you notice. One finding, one fix. Other issues will be
