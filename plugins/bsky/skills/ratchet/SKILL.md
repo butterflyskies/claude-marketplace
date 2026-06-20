@@ -97,7 +97,8 @@ The sub-agent proposes a change. Then:
 
 3. **Evaluate:**
    - If the metric improved vs the baseline: **keep.** Commit with a message
-     describing the change and the metric delta. Update the baseline.
+     describing the change and the metric delta. The baseline does NOT move —
+     all comparisons remain against the original starting value.
    - If the metric did not improve or the test failed: **revert.** Reset to
      the previous commit. Increment the stall counter.
 
