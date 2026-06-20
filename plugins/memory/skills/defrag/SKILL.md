@@ -82,12 +82,21 @@ Extract references from the memory's description (defer full `read` until needed
   `gh pr view <number> --repo <owner/repo> --json state --jq '.state'`.
   If the PR is merged or closed and the memory describes it as open/pending,
   flag as stale.
+- **Issue references** (`owner/repo#N` or GitHub issue URLs): check status with
+  `gh issue view <number> --repo <owner/repo> --json state --jq '.state'`.
+  If the issue is closed and the memory describes it as open/active, flag as stale.
+  Disambiguate PR vs issue references by trying `gh pr view` first — if it 404s,
+  fall back to `gh issue view`.
 - **Person references**: check if an anchor memory exists in
   `person-<name>` scope via `list`. If no anchor memory exists, flag for
   review (the person reference may be orphaned or the person scope renamed).
 - **Branch references** (`branch: <name>`): check with
   `git ls-remote --heads origin <branch> 2>/dev/null`. If the branch no longer
   exists on any relevant remote, flag as stale.
+- **Scope references** (`[[scope-name/...]]` or explicit scope mentions): check
+  whether the referenced scope still has any memories by calling `list` with that
+  scope. If `list` returns empty, the scope is effectively dead — flag the
+  reference as stale.
 
 Only perform staleness checks that are practical in the current environment.
 Skip checks that require repos not currently cloned.
@@ -112,6 +121,30 @@ authors or constructs. Before flagging a cross-scope pair as duplicates:
 2. If the scopes differ, mark the pair as **cross-construct** -- these require
    extra care and should never be auto-merged
 3. Include author/scope provenance in the report
+
+### 2e. Cross-instance dedup (shared vs private)
+
+When `--scope all` is active, scan the `collective-conscious` (shared) scope
+against each private scope for content stored in both places:
+
+1. Call `list` with `scope: "collective-conscious"` to enumerate shared memories.
+2. For each shared memory, call `recall` against each private scope using the
+   shared memory's name and key terms. Use the same `dup-threshold`.
+3. For each hit below `dup-threshold`:
+   - `read` both the shared and private memory
+   - Determine which is richer (more detail, more cross-links, more recent edits)
+   - Flag the pair with a recommendation:
+     - If the shared version is richer or equivalent: recommend removing the
+       private copy (it's redundant)
+     - If the private version is richer: recommend promoting the private version
+       to shared (edit the shared memory with the richer content, then remove
+       the private copy)
+     - If they've diverged meaningfully: flag as a **conflict** for human review
+4. In `--auto-prune` mode, execute the recommendation for non-conflicting pairs.
+   In normal mode, flag for review. In `--dry-run` mode, report only.
+
+This phase prevents the same knowledge from accumulating in both shared and
+private stores over time.
 
 ## Phase 3: Merge
 
@@ -200,6 +233,7 @@ After all phases complete, output a structured summary.
 | Stale flagged for review | N |
 | Cross-links added | N |
 | Conflicts found | N |
+| Cross-instance duplicates | N |
 | Index recommendations | N |
 
 ### Actions Taken
@@ -229,6 +263,10 @@ After all phases complete, output a structured summary.
 - **scope-x/memory-a** vs **scope-y/memory-b** (distance: 0.09)
   Both scopes must agree before merging.
 
+#### Cross-instance Duplicates (shared vs private)
+- **collective-conscious/memory-a** vs **private-scope/memory-b** (distance: 0.07)
+  Recommendation: <keep shared | promote private | conflict — diverged>
+
 ### Recommendations
 - <scope> has N memories with no index — consider creating one
 - <other actionable suggestions>
@@ -244,6 +282,7 @@ After generating the report:
 1. Call `sync` to push any changes made during the merge phase
 2. If conflicts were found and the user is interactive, offer to resolve them
    one at a time
+3. Output report feeds into session-handoff if findings are significant
 
 ## Constraints
 
