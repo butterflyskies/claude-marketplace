@@ -61,7 +61,9 @@ For each piece, at each depth level:
    interface descriptions." This is a hard gate, not a suggestion.
 
 5. **Depth limit.** If `--max-depth` is reached and a piece is still too large,
-   flag it: "NEEDS MANUAL SPLIT — exceeded max depth." Don't force a bad split.
+   escalate to opus for re-scoping — the piece needs a different decomposition
+   strategy, not finer splitting. If `--model` is already opus, flag it:
+   "NEEDS MANUAL SPLIT — exceeded max depth at opus tier." Don't force a bad split.
 
 ## Phase 3: Validation
 
@@ -112,7 +114,7 @@ Coverage: {covered}/{total} requirements
 - **Inputs:** {what it receives}
 - **Outputs:** {what it produces}
 - **Invariants:** {what must remain true}
-- **Test condition:** {how to verify correctness}
+- **Test condition:** {executable command + success criteria for ratchet --test}
 - **Dependencies:** none | {atom-ids that must complete first}
 - **Parallel-safe:** yes | no
 
