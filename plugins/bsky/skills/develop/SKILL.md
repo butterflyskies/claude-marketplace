@@ -13,6 +13,21 @@ Also load `rust-code-standards` if working in a Rust project.
 (scope: global) if not already loaded this session. Check for project-scoped memories (use
 `list` filtered by project scope) — pass their contents to sub-agents as context.
 
+### Collective-conscious pre-flight
+
+Before dispatching any sub-agents, load shared knowledge from collective-conscious:
+
+1. **Universal coding standards:** `recall` query "coding standards", scope "shared". Read the
+   full memory if found. These apply to all projects unless overridden.
+2. **Project-specific coding standards:** `recall` query "coding-standards-{project}", scope
+   "shared". These override or extend the universal standards for this project.
+3. **Design specs:** `recall` with a query matching the task description (or the linked issue
+   title), scope "shared". If a locked design spec exists — especially one linked from a GitHub
+   issue — read it in full. Feed it into Phase 1 planning as input context so the planning agent
+   works from the agreed design, not from scratch.
+
+Pass all loaded CC context to sub-agents alongside memory-mcp project context.
+
 ## Argument handling
 
 `$ARGUMENTS` describes the work to do. It can be:
