@@ -1,0 +1,8 @@
+{
+  "name": "prodagent",
+  "description": "Prodagent setup and configuration skills",
+  "author": {
+    "name": "butterflyskies"
+  },
+  "license": "MIT OR Apache-2.0"
+}

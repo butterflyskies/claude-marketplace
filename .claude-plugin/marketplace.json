@@ -53,6 +53,12 @@
       "source": "./plugins/bsky-meta",
       "description": "Loadout plugin — installs all butterflyskies plugins via dependencies",
       "license": "MIT OR Apache-2.0"
+    },
+    {
+      "name": "prodagent",
+      "source": "./plugins/prodagent",
+      "description": "Prodagent setup and configuration skills",
+      "license": "MIT OR Apache-2.0"
     }
   ]
 }
