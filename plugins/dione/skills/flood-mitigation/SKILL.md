@@ -15,7 +15,9 @@ Temporarily mute or remove flooded channels using existing dione tools, with aut
 
 ## How to detect a real flood
 
-A flood is **sustained**: N+ unsolicited messages from one channel on 2+ consecutive turns.
+A flood is **sustained**: 5+ unsolicited messages from one channel on 2+ consecutive turns.
+
+**Re-entrancy guard:** if the skill is already active for a channel (breaker tripped, restore pending), do not re-trip. Wait for the current cooldown to expire first.
 
 False positives to ignore:
 - Permission nap recovery (queued messages dump on resume — one-time)
@@ -46,23 +48,25 @@ Is the channel flooding with messages **@-mentioning you**, or is it **ambient t
 
 The channel is actively pinging you faster than you can respond.
 
-1. Post one line to the flooded channel: "stepping back for [N] min — too much traffic"
-2. Run `remove_channel` to stop all delivery from that channel
-3. Create a cron job to restore after the cooldown period:
-   - Run `add_channel` with `require_mention: true`
-4. Post to your ops channel: "circuit breaker tripped on #channel-name, restoring in [N] min"
-5. Store the breaker state in memory: channel ID, restore time, trip count
+1. **Save the channel's current config** before changing anything (store in `circuit-breaker-state` memory)
+2. Post one line to the flooded channel: "stepping back for [N] min — too much traffic"
+3. Run `remove_channel` to stop all delivery from that channel
+4. Create a cron job to restore after the cooldown period:
+   - Run `add_channel` with the **original saved config** (not hardcoded `require_mention: true`)
+5. Post to your ops channel: "circuit breaker tripped on #channel-name, restoring in [N] min"
+6. Store the breaker state in memory: channel ID, original config, restore time, trip count
 
 ### 2b. If ambient flood (not directed at you)
 
 The channel is busy but not pinging you specifically.
 
-1. Post one line to the flooded channel: "snooze-muting for [N] min"
-2. Run `update_channel` to set `require_mention: true`
-3. Create a cron job to restore after the cooldown period:
-   - Run `update_channel` to set `require_mention: false`
-4. Post to ops: "snooze-muting #channel-name for [N] min"
-5. Store the breaker state in memory
+1. **Save the channel's current `require_mention` setting** (store in `circuit-breaker-state` memory)
+2. Post one line to the flooded channel: "snooze-muting for [N] min"
+3. Run `update_channel` to set `require_mention: true`
+4. Create a cron job to restore after the cooldown period:
+   - Run `update_channel` to restore **original `require_mention` value**
+5. Post to ops: "snooze-muting #channel-name for [N] min"
+6. Store the breaker state in memory: channel ID, original config, restore time, trip count
 
 ### 3. Cooldown escalation
 
@@ -70,7 +74,7 @@ First trip: 15 minutes
 Second consecutive trip (same channel): 30 minutes
 Third+: 60 minutes (cap)
 
-After 60 min cap, the channel stays muted until the next heartbeat or inner-state-check manually reviews it.
+After 60 min cap, the channel stays muted until the next heartbeat, which MUST restore and log. This is not optional — invariant 1 (no permanent drops) takes priority. The heartbeat restores, logs, and resets the trip counter for that channel.
 
 ### 4. Recovery
 
@@ -80,6 +84,7 @@ When the restore cron fires:
 2. Fetch a summary: count of messages that arrived during the mute, how many were directed at you
 3. Post to ops: "mute ended on #channel-name — [N] messages arrived, [M] directed at you"
 4. Decide whether to catch up (read the backlog) or skip (move on)
+5. **Reset the trip counter** for this channel — the flood is presumed over until proven otherwise
 
 ### 5. Proactive use
 
