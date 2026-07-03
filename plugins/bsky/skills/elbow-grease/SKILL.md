@@ -515,26 +515,35 @@ After all five sub-agents return:
 
 ## Phase 3.5: Fix & re-review (autonomous loop)
 
-If any P1, P2, or P3 findings survived verification in Phase 3:
+If any P1, P2, or P3 findings survived verification in Phase 3, enter this loop.
+**Do not proceed to Phase 4 until the loop exits.**
 
-1. **Fix all findings** — implement the concrete fixes described in each finding.
-   Do not ask the user which findings to address. Fix all of them.
-2. **Commit the fixes** — create a new commit with a clear message describing what
-   was fixed (e.g., "fix: address PR #N review findings").
-3. **Re-run Phase 2** with `--since <previous-commit>` to get incremental review of
-   only the fix commits. Include the prior findings as "previously fixed" context so
-   sub-agents can verify fixes and check for regressions.
-4. **Repeat** — if the incremental review produces new findings, fix those and re-run.
-   Continue until a review round returns PASS (zero findings).
+```
+round = 1
+while findings exist:
+    1. Fix all findings from this round
+    2. Commit: "fix: address review findings (round N)"
+    3. Push the fix commit
+    4. Re-run Phase 2 with --since <previous-commit>
+       (incremental review of only the fix commits)
+    5. Re-run Phase 3 on the new results
+    6. If zero findings → PASS → exit loop
+    7. If findings remain → round += 1, continue loop
+    8. If stalemate (fix requires design change) → exit loop with rationale
+```
+
+<!-- Maintenance note: the while-loop pseudocode above is the mechanism that
+makes constructs actually re-review. A numbered list does not produce the loop.
+The callout below is redundant backup — keep both, but do NOT cut the loop.
+Proven via minimal-pair experiment 2026-07-03. -->
+
+**IMPORTANT — this is the step that gets skipped.** After step 2, you will feel
+done. You are not done. Step 4 (re-running the review on your fixes) is mandatory.
+Fixes introduce new issues more often than you expect. Do not report to the user
+until a clean round confirms the fixes are correct.
 
 This loop is autonomous — no user intervention between rounds. The user sees the
-final clean result, not each intermediate round. Each round should push the fix
-commit so the PR reflects the full review history.
-
-**Exit conditions:**
-- PASS — zero findings. Proceed to Phase 4 (Report).
-- Stalemate — a finding cannot be fixed without changing the design intent. Report
-  it as deferred with rationale and proceed to Phase 4.
+final clean result, not each intermediate round.
 
 ## Phase 4: Report
 
