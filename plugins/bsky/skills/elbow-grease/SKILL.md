@@ -121,8 +121,8 @@ independent findings — a bug one agent normalizes, another catches.
 **Model assignment** (passed to the dispatch backend as generic names):
 
 When `--model` is NOT specified (standalone default):
-- **sonnet**: Correctness, Design, and Tests sub-agents (mechanical analysis)
-- **opus**: Architecture and Idiomacy sub-agents (judgment-heavy review)
+- **sonnet**: Safety, Design, and Tests sub-agents (mechanical analysis)
+- **opus**: Security and Idiomacy sub-agents (judgment-heavy review)
 
 When `--model <name>` IS specified (e.g., by `bsky:multimodel-elbow-grease`):
 - All five sub-agents use the specified model, overriding the per-lens map above.
@@ -133,7 +133,7 @@ The dispatch backend maps these generic names to provider-specific model IDs.
 When using the default `bsky:elbow-grease-dispatch`, these map to native Claude
 Agent tool calls with the corresponding model parameter.
 
-### Correctness sub-agent
+### Safety
 
 ```
 You are reviewing code changes for correctness and safety issues. Precision matters
@@ -174,7 +174,7 @@ For each finding, output EXACTLY this format:
 - Fix: <describe the concrete code change or approach — DO NOT implement it>
 ```
 
-### Design sub-agent
+### Design
 
 ```
 You are reviewing code changes for design and maintainability issues. Precision matters
@@ -230,7 +230,7 @@ For each finding, output EXACTLY this format:
 - Fix: <describe the concrete code change or approach — DO NOT implement it>
 ```
 
-### Architecture sub-agent (model: opus)
+### Security (model: opus)
 
 ```
 You are reviewing code changes for architectural fitness and security. You did NOT
@@ -309,7 +309,7 @@ For each finding, output EXACTLY this format:
 - Fix: <describe the concrete code change or approach — DO NOT implement it>
 ```
 
-### Idiomacy sub-agent (model: opus)
+### Idiomacy (model: opus)
 
 ```
 You are reviewing code changes for idiomatic language use and elegance. You did NOT
@@ -389,7 +389,7 @@ For each finding, output EXACTLY this format:
 - Fix: <describe the concrete code change or approach — DO NOT implement it>
 ```
 
-### Tests sub-agent (model: sonnet)
+### Tests (model: sonnet)
 
 ```
 You are reviewing code changes exclusively for test quality. You did NOT write this
