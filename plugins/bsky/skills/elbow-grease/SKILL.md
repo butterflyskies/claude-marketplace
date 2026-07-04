@@ -192,7 +192,12 @@ Review the following changes for:
 
 **Dead code & redundancy**
 - Code that the change made unreachable or unnecessary
-- Duplicated logic that should be consolidated
+- Scan the diff for repeated code patterns across different functions — blocks that
+  are distant in the full file often appear adjacent in a diff, making duplication
+  visible. Look for near-identical blocks with only minor variations (different
+  variable names, slightly different arguments, same control flow).
+- When you spot two blocks that do essentially the same thing, flag it — even if
+  they live in separate functions or handlers. Propose extracting the shared logic.
 - Imports, variables, enum variants, or parameters that are no longer used
 - For `Option`-guarded features: does disabling the feature leave allocated-but-unused
   fields? If so, group the feature's state into a sub-struct and wrap in `Option`.
@@ -439,6 +444,19 @@ Review ALL tests in the diff (new and modified) for:
 - When code has capacity limits, TTLs, or cleanup: is there a test that exceeds the
   limit and verifies eviction behavior? Not just "item is added" but "oldest item is
   removed when capacity is exceeded."
+
+**Integration test coverage for external APIs**
+- For any feature that talks to an external API (Discord, GitHub, webhooks, MCP
+  servers): are there integration tests or recorded-response tests — not just unit
+  tests with mocked response shapes? Unit tests that mock the HTTP response shape
+  verify parsing, not behavior. Flag when this is the ONLY test coverage.
+- Specifically check for: pagination (does page 2 return different results than
+  page 1?), auth flows (does token refresh work?), rate-limit handling (is retry-
+  after logic exercised?), and multi-step state (does create-then-update-then-delete
+  work end-to-end?).
+- If the project has no integration test infrastructure yet, flag the gap and
+  suggest what the first integration test should cover — the highest-risk API
+  interaction path (usually pagination or error recovery).
 
 For each finding, output EXACTLY this format:
 **[P1|P2|P3] <short title>**
