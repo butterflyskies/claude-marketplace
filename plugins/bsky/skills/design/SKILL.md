@@ -489,7 +489,7 @@ signals for revision.
 
 ### What other skills contribute (follow-on changes)
 
-- **`/code-review` Phase 6**: when `docs/design/` exists, notes whether security
+- **`bsky:elbow-grease` Phase 6**: when `docs/design/` exists, notes whether security
   findings map to threat model coverage or represent gaps. Appends to
   `design-effectiveness` memory.
 - **`/land` Phase 1**: when design artifacts exist, notes whether they were referenced
@@ -503,7 +503,7 @@ process itself is working across all projects — it's about the methodology, no
 single project's design. Each observation is a dated one-liner with project context:
 
 ```
-2026-04-15 [elfin]: /code-review found auth bypass (P1) — threat model covered auth
+2026-04-15 [elfin]: bsky:elbow-grease found auth bypass (P1) — threat model covered auth
 flows but missed the /admin path. Gap in trust boundary enumeration.
 2026-04-18 [memory-mcp]: /develop planning agent used requirements.md as plan
 foundation — utilization confirmed.
