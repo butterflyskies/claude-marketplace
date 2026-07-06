@@ -298,6 +298,14 @@ Review the following changes for:
 - Do types encode invariants, or do they rely on runtime checks for things the type
   system could guarantee? (e.g., separate structs for validated vs unvalidated data,
   enums over boolean flags, NonZero types where zero is invalid)
+- **Loose-string audit** — challenge every `String`. For each `String` / `Option<String>`
+  field, parameter, or return value, name the constraint on it or confirm it is
+  genuinely free-form text. Flag stringly-typed constrained domains — timestamps, dates,
+  durations, IDs, URLs, paths, semver, enums-encoded-as-strings — and recommend the
+  domain type: a newtype, an existing project type (e.g. a `Timestamp` / `DateTime<Utc>`),
+  or an enum. A field such as `timestamp: String` that a datetime type would model is a
+  finding: it defers to runtime parsing what the type system could guarantee. This is the
+  class of issue that slips through unless every `String` is challenged, so do not skip it.
 - Are generic bounds minimal? Over-constrained generics limit reuse; under-constrained
   ones push errors to call sites.
 - Are trait implementations missing that would make the types more composable?
