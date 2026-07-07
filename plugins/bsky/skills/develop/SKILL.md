@@ -1,5 +1,6 @@
 ---
 name: develop
+category: development
 description: "End-to-end development workflow with sub-agent specialization. Use when implementing features, fixing bugs, or making code changes that should follow project standards. Dispatches focused sub-agents for planning, implementation, quality checks, and architectural review — keeping the coordinator lean and the overarching goals visible."
 ---
 
@@ -11,13 +12,8 @@ The coordinator (you) stays lean — orchestrate, don't accumulate.
 If a `required-environment-variables` memory exists (scope: global), read and apply it.
 Also load `rust-code-standards` if working in a Rust project.
 
-**This is a principle-bound skill.** Before starting, load design principles:
-```
-recall query: "principle", scope: "shared", limit: 20
-```
-Pass loaded principles to implementation and review sub-agents as context.
-(scope: global) if not already loaded this session. Check for project-scoped memories (use
-`list` filtered by project scope) — pass their contents to sub-agents as context.
+**This is a principle-bound skill.** First invoke `bsky:load-design-principles`
+and pass the returned digest to implementation and review sub-agents.
 
 ## Argument handling
 

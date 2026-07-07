@@ -1,5 +1,6 @@
 ---
 name: ratchet
+category: development
 description: "Automated hill-climbing loop. Proposes changes, tests, keeps improvements, reverts regressions. Grinds overnight."
 ---
 
@@ -8,6 +9,9 @@ description: "Automated hill-climbing loop. Proposes changes, tests, keeps impro
 Automated improvement loop inspired by Karpathy's autoresearch. Propose a change,
 run the tests, keep if the metric improves, revert if it doesn't. Repeat until the
 budget runs out or progress stalls.
+
+**This is a principle-bound skill.** First invoke `bsky:load-design-principles`;
+a proposed change that violates a loaded principle is a revert, not a keep.
 
 ## Argument handling
 

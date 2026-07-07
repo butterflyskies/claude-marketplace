@@ -1,5 +1,6 @@
 ---
 name: design
+category: design
 description: "Structured design process for software projects. Produces specification artifacts (problem space, requirements, architecture, threat model, test plan) in docs/design/ before implementation begins. Scales from lightweight to full ceremony based on scope."
 ---
 
@@ -12,12 +13,8 @@ If a `required-environment-variables` memory exists (scope: global), read and ap
 Also load any project-scoped memories (use `list` filtered by project scope) if not already
 loaded this session.
 
-**This is a principle-bound skill.** Before starting, load design principles:
-```
-recall query: "principle", scope: "shared", limit: 20
-```
-Apply loaded principles throughout the design process — especially attractive nuisance,
-fix the class, solve for the cohort, and meaningful identifiers.
+**This is a principle-bound skill.** First invoke `bsky:load-design-principles`
+and apply the returned digest throughout the design process.
 
 ## Argument handling
 

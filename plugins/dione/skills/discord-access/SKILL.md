@@ -1,5 +1,6 @@
 ---
 name: discord:access
+category: operations
 description: Manage Dione Discord channel access — edit allowlists, add/remove channels, set DM policy. Use when the user asks to allow someone, add a channel, check who's allowed, or change access policy.
 ---
 
