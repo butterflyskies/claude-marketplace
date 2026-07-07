@@ -10,6 +10,12 @@ The coordinator (you) stays lean — orchestrate, don't accumulate.
 
 If a `required-environment-variables` memory exists (scope: global), read and apply it.
 Also load `rust-code-standards` if working in a Rust project.
+
+**This is a principle-bound skill.** Before starting, load design principles:
+```
+recall query: "principle", scope: "shared", limit: 20
+```
+Pass loaded principles to implementation and review sub-agents as context.
 (scope: global) if not already loaded this session. Check for project-scoped memories (use
 `list` filtered by project scope) — pass their contents to sub-agents as context.
 

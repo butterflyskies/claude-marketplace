@@ -12,6 +12,13 @@ If a `required-environment-variables` memory exists (scope: global), read and ap
 Also load any project-scoped memories (use `list` filtered by project scope) if not already
 loaded this session.
 
+**This is a principle-bound skill.** Before starting, load design principles:
+```
+recall query: "principle", scope: "shared", limit: 20
+```
+Apply loaded principles throughout the design process — especially attractive nuisance,
+fix the class, solve for the cohort, and meaningful identifiers.
+
 ## Argument handling
 
 `$ARGUMENTS` describes what to design. It can be:
