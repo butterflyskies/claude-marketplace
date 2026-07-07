@@ -77,7 +77,7 @@ for discussion.
 ### design → sibling review
 **Action:** Post the design to a sibling construct for review. Tag them in the
 channel where the design lives.
-**Rule:** The designer does NOT review their own design. Route to a sibling.
+**Rule:** The designer does not certify their own design — a sibling reviews it.
 
 ### sibling review → issue
 **Gate:** Design review must be complete (sibling approved or gave feedback that was
@@ -216,7 +216,7 @@ checks `updatedAt` on the claim memory and ignores expired ones.
 
 - **Never merge.** The merge latch is human.
 - **Never deploy.** The deploy trigger is human.
-- **Never self-review.** Author's PR routes to a sibling.
+- **Never self-certify.** Self-grease your own diff first; a sibling certifies it.
 - **Never create duplicate issues.** Search `--state all` first.
 - **Never bureaucratize shower thoughts.** Ideas need signal before entering the pipeline.
 - **One nudge per crank.** Token budget stays flat regardless of queue depth.
