@@ -2,14 +2,12 @@
 # skill-consistency — (relationAll loadsDesignPrinciples PrincipleBoundSkill)
 #
 # The category ontology is a tree declared in plugins/SKILL-CATEGORIES.md
-# (adjacency list: category, parent, declares). Principle-boundness is not a
-# flag — it is ancestry: a skill's category is principle-bound iff
-# `principle-bound` appears on its path to the root. There is no boolean to
-# drift from the structure.
+# (adjacency list: category, parent, declares). A skill's category is
+# principle-bound iff `principle-bound` appears on its path to the root.
 #
-# HONESTY DISCLAIMER: this is a presence-of-incantation lint, not a verified
-# load. It proves the instruction exists in the skill text — not that a
-# construct executed it. The runtime phantom-set guard lives in
+# DISCLAIMER: this is a presence-of-incantation lint, not a verified load.
+# It proves the instruction exists in the skill text — not that a construct
+# executed it. The runtime phantom-set guard lives in
 # bsky:load-design-principles itself and in the wheel's sweep; CI has no CC
 # access.
 set -uo pipefail
@@ -52,8 +50,13 @@ is_bound() {
 
 # ---- forward direction: every skill declares a valid leaf; bound ⇒ loads ---
 for skill_file in plugins/*/skills/*/SKILL.md; do
+  category_count=$(awk '/^---$/{fence++; next} fence==1 && /^category:/{n++} END{print n+0}' "$skill_file")
   category=$(awk '/^---$/{fence++; next} fence==1 && /^category:/{sub(/^category:[[:space:]]*/, ""); print; exit}' "$skill_file")
 
+  if [ "$category_count" -gt 1 ]; then
+    echo "FAIL: $skill_file declares $category_count categories — exactly one per skill"
+    fail=1; continue
+  fi
   if [ -z "$category" ]; then
     echo "FAIL: $skill_file has no category in frontmatter — every skill must classify itself"
     fail=1; continue

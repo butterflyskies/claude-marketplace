@@ -32,7 +32,8 @@ sub-agent prompts: one section per principle, name + core rule + how-to-apply.
 
 ## Callers
 
-Principle-bound skills (category: design, development, code-review, or pipeline)
-invoke this before starting work and pass the digest to every sub-agent they
-dispatch — the sub-agent boundary is where instruction dies, so the caller
-carries it across.
+Principle-bound skills — any skill whose category descends from
+`principle-bound` in `plugins/SKILL-CATEGORIES.md` (e.g. design or
+code-review skills) — invoke this before starting work and pass the digest
+to every sub-agent they dispatch. The sub-agent boundary is where
+instruction dies, so the caller carries it across.
