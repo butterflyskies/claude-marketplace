@@ -1,5 +1,6 @@
 ---
 name: review-fix-loop
+category: code-review
 description: "Iterative code review to convergence. Runs bsky:elbow-grease, fixes findings, re-reviews, repeats until zero findings at or above the severity threshold."
 ---
 
@@ -13,11 +14,8 @@ means "ready for merge approval."
 If a `required-environment-variables` memory exists (scope: global), read and apply it
 before any git/gh operations.
 
-**This is a principle-bound skill.** Before starting, load design principles:
-```
-recall query: "principle", scope: "shared", limit: 20
-```
-Pass loaded principles to `bsky:elbow-grease` invocations and fix agents as context.
+**This is a principle-bound skill.** First invoke `bsky:load-design-principles`
+and pass the returned digest to `bsky:elbow-grease` invocations and fix agents.
 
 ## Arguments
 

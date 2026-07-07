@@ -1,5 +1,6 @@
 ---
 name: keep-the-wheel-turning
+category: pipeline
 description: "Cron-driven pipeline advancer. Scans open work across butterflyskies org and pushes the least-recently-touched item one step forward. One nudge per crank, never stops."
 ---
 
@@ -12,12 +13,8 @@ The wheel doesn't need to be fast — it needs to never stop.
 If a `required-environment-variables` memory exists (scope: global), read and apply it
 before any git/gh operations.
 
-**This is a principle-bound skill.** Before doing any work, load design principles:
-```
-recall query: "design principles index", scope: "shared"
-```
-Read any principles relevant to the current step (elbow-grease, design review, etc.)
-and pass them to sub-agents as context.
+**This is a principle-bound skill.** First invoke `bsky:load-design-principles`
+and pass the returned digest to sub-agents for whichever step is being cranked.
 
 ## Arguments
 

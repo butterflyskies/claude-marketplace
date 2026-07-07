@@ -1,5 +1,6 @@
 ---
 name: land
+category: operations
 description: End-of-session wrap-up. Commits outstanding work, updates PRs, syncs project tracker, captures wins, writes handoff notes.
 disable-model-invocation: false
 ---

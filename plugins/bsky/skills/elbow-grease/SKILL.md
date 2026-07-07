@@ -1,5 +1,6 @@
 ---
 name: elbow-grease
+category: code-review
 description: "Systematic code review with sub-agent analysis. Works on PRs, branches, files, or staged changes."
 ---
 
@@ -8,13 +9,8 @@ description: "Systematic code review with sub-agent analysis. Works on PRs, bran
 Perform a structured, multi-phase code review. This skill produces actionable findings
 with severity, location, and concrete fixes — not style nits or praise.
 
-**This is a principle-bound skill.** Before starting, load design principles:
-```
-recall query: "principle", scope: "shared", limit: 20
-```
-Read any principles relevant to code review (attractive nuisance, fix the class, solve
-for the cohort, meaningful identifiers) and pass them to sub-agents as context alongside
-coding standards.
+**This is a principle-bound skill.** First invoke `bsky:load-design-principles`
+and pass the returned digest to sub-agents as context alongside coding standards.
 
 Use memory-mcp's `read` tool to load the `code-review-patterns` memory (scope: global)
 before starting. It contains learned patterns from previous reviews that should inform

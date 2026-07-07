@@ -1,5 +1,6 @@
 ---
 name: skill-forge
+category: development
 description: "Create, edit, and publish skills to the marketplace repo. Takes a description of what to build or change, writes the SKILL.md, and handles the git workflow (branch, commit, push, PR). Use when creating new skills or modifying existing ones."
 ---
 
@@ -9,6 +10,10 @@ Build or edit skills and route them into the marketplace repo as PRs.
 
 If a `required-environment-variables` memory exists (scope: global), read and apply it
 before any git/gh operations.
+
+**This is a principle-bound skill.** First invoke `bsky:load-design-principles`;
+skills are high-level code — drafts must respect the digest (meaningful identifiers
+especially: no opaque phase numbers or lettered sub-agents).
 
 ## Arguments
 
@@ -64,6 +69,7 @@ Write the SKILL.md following the established format:
 ```yaml
 ---
 name: <kebab-case-name>
+category: development
 description: "<one-line trigger description — used for skill matching>"
 ---
 ```

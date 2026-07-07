@@ -1,5 +1,6 @@
 ---
 name: token-audit
+category: operations
 description: "Read session stats, calculate API-equivalent cost, track burn rate vs budget, and project when rate limits will hit. Use when asked about token usage, costs, or budget."
 ---
 

@@ -1,5 +1,6 @@
 ---
 name: defrag
+category: operations
 description: "Memory consolidation for memory-mcp instances. Scans for near-duplicate, overlapping, or stale memories and merges, prunes, or flags them. Use when asked to defragment, consolidate, or clean up memories."
 model: haiku
 ---

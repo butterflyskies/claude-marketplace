@@ -1,5 +1,6 @@
 ---
 name: scope-sharpen
+category: design
 description: "Break a design spec into implementation-ready atoms. Iterative refinement until each piece is small enough for a cheap model to execute reliably."
 ---
 
@@ -8,6 +9,9 @@ description: "Break a design spec into implementation-ready atoms. Iterative ref
 Takes a design spec and breaks it into implementation atoms — small, testable,
 independently executable units of work. Each atom is sharp enough that a sonnet
 agent could implement it in a single commit without asking a clarifying question.
+
+**This is a principle-bound skill.** First invoke `bsky:load-design-principles`
+and apply the returned digest when carving atoms — atom boundaries are design decisions.
 
 ## Argument handling
 
