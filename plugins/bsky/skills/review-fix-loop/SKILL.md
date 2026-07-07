@@ -13,6 +13,12 @@ means "ready for merge approval."
 If a `required-environment-variables` memory exists (scope: global), read and apply it
 before any git/gh operations.
 
+**This is a principle-bound skill.** Before starting, load design principles:
+```
+recall query: "principle", scope: "shared", limit: 20
+```
+Pass loaded principles to `bsky:elbow-grease` invocations and fix agents as context.
+
 ## Arguments
 
 `$ARGUMENTS` controls scope and behavior:

@@ -8,6 +8,14 @@ description: "Systematic code review with sub-agent analysis. Works on PRs, bran
 Perform a structured, multi-phase code review. This skill produces actionable findings
 with severity, location, and concrete fixes — not style nits or praise.
 
+**This is a principle-bound skill.** Before starting, load design principles:
+```
+recall query: "principle", scope: "shared", limit: 20
+```
+Read any principles relevant to code review (attractive nuisance, fix the class, solve
+for the cohort, meaningful identifiers) and pass them to sub-agents as context alongside
+coding standards.
+
 Use memory-mcp's `read` tool to load the `code-review-patterns` memory (scope: global)
 before starting. It contains learned patterns from previous reviews that should inform
 what you look for. If the memory doesn't exist yet, proceed without it — findings from
