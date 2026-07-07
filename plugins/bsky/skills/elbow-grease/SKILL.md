@@ -1,9 +1,9 @@
 ---
-name: code-review
+name: elbow-grease
 description: "Systematic code review with sub-agent analysis. Works on PRs, branches, files, or staged changes."
 ---
 
-# /code-review — Systematic Code Review
+# /elbow-grease — Systematic Code Review
 
 Perform a structured, multi-phase code review. This skill produces actionable findings
 with severity, location, and concrete fixes — not style nits or praise.
@@ -45,7 +45,7 @@ the review operates in **incremental mode** for fix-round efficiency:
 
 This mode cuts review time on rounds 2+ significantly by preventing re-analysis of
 already-reviewed, unchanged code. The `/develop` skill's Phase 4.5 should use this mode
-automatically when re-invoking `/code-review` after fixes.
+automatically when re-invoking `bsky:elbow-grease` after fixes.
 
 ## Phase 1: Gather context
 
@@ -84,10 +84,11 @@ each with `run_in_background: true`. This ensures true concurrent execution — 
 them sequentially wastes time and defeats the purpose of independent analysis. Each agent
 gets the same diff and context but a different analytical lens. The separation ensures
 independent findings — a bug one agent normalizes, another catches. Use **sonnet** for
-sub-agents A, B, and E (mechanical analysis and test quality), **opus** for sub-agents C
-and D (judgment-heavy architectural and idiomacy review).
+the **Correctness**, **Design**, and **Tests** sub-agents (mechanical analysis and test
+quality), **opus** for the **Architecture** and **Idiomacy** sub-agents (judgment-heavy
+architectural and idiomacy review).
 
-### Sub-agent A: Correctness & Safety
+### Correctness sub-agent
 
 ```
 You are reviewing code changes for correctness and safety issues. Precision matters
@@ -128,7 +129,7 @@ For each finding, output EXACTLY this format:
 - Fix: <describe the concrete code change or approach — DO NOT implement it>
 ```
 
-### Sub-agent B: Design & Maintainability
+### Design sub-agent
 
 ```
 You are reviewing code changes for design and maintainability issues. Precision matters
@@ -179,7 +180,7 @@ For each finding, output EXACTLY this format:
 - Fix: <describe the concrete code change or approach — DO NOT implement it>
 ```
 
-### Sub-agent C: Architecture & Security (model: opus)
+### Architecture sub-agent (model: opus)
 
 ```
 You are reviewing code changes for architectural fitness and security. You did NOT
@@ -258,7 +259,7 @@ For each finding, output EXACTLY this format:
 - Fix: <describe the concrete code change or approach — DO NOT implement it>
 ```
 
-### Sub-agent D: Elegance & Idiomacy (model: opus)
+### Idiomacy sub-agent (model: opus)
 
 ```
 You are reviewing code changes for idiomatic language use and elegance. You did NOT
@@ -329,7 +330,7 @@ For each finding, output EXACTLY this format:
 - Fix: <describe the concrete code change or approach — DO NOT implement it>
 ```
 
-### Sub-agent E: Test Quality (model: sonnet)
+### Tests sub-agent (model: sonnet)
 
 ```
 You are reviewing code changes exclusively for test quality. You did NOT write this

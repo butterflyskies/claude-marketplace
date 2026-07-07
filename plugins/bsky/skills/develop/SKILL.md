@@ -199,16 +199,16 @@ If the quality agent reports unfixed issues, present them to the user with optio
 
 ## Phase 4: Code review
 
-Invoke the `/code-review` skill with `branch` scope. It runs parallel sub-agents and
+Invoke the `bsky:elbow-grease` skill with `branch` scope. It runs parallel sub-agents and
 produces deduplicated, verified findings.
-The `/code-review` skill is the single source of truth for review methodology — do not
+The `bsky:elbow-grease` skill is the single source of truth for review methodology — do not
 duplicate its logic here.
 
 ```
-/code-review branch
+bsky:elbow-grease branch
 ```
 
-The code-review skill will post findings to the PR if one exists, or display in-session.
+The elbow-grease skill will post findings to the PR if one exists, or display in-session.
 Collect the findings from the review output.
 
 If there are any findings (P1, P2, or P3), proceed directly to Phase 4.5 — do not wait
@@ -231,7 +231,7 @@ When Phase 4 produces findings:
 2. After fixes are applied, dispatch the **quality sub-agent** (model: sonnet) again
    to verify fmt/clippy/tests still pass.
 
-3. Run `/code-review branch --since <last-reviewed-commit>` to use incremental review
+3. Run `bsky:elbow-grease branch --since <last-reviewed-commit>` to use incremental review
    mode. This scopes the review to only the fix commits, verifies prior findings are
    resolved, and checks for new issues — without re-reviewing unchanged code.
    Record the HEAD commit SHA before each review round so you can pass it as `--since`
@@ -307,13 +307,13 @@ or as a follow-up.
 
 ### 6b. Left-shifted improvement (upstream skills)
 
-Ask: did the review-fix cycle reveal a gap in `/design` or `/code-review`?
+Ask: did the review-fix cycle reveal a gap in `/design` or `bsky:elbow-grease`?
 
 Examples:
 - Review found an architectural issue that `/design` Phase 3 should have
   surfaced → update the design skill's architectural checklist
-- Review consistently catches a pattern that should be a `/code-review`
-  sub-agent heuristic → update the code-review skill or `code-review-patterns` memory
+- Review consistently catches a pattern that should be a `bsky:elbow-grease`
+  sub-agent heuristic → update the elbow-grease skill or `code-review-patterns` memory
 - A new type of finding emerged that no existing reviewer covers →
   add a reviewer or expand an existing one
 
@@ -325,7 +325,7 @@ that should have caught the issue earlier.
 
 If the review produced verified P1 or P2 findings that reveal a **recurring pattern**
 (not a one-off bug), update the `code-review-patterns` memory (scope: global).
-This is delegated to `/code-review`'s Phase 6 when invoked through develop, but
+This is delegated to `bsky:elbow-grease`'s Phase 6 when invoked through develop, but
 verify it happened — if the review skill skipped it, do it here.
 
 ## Language detection
