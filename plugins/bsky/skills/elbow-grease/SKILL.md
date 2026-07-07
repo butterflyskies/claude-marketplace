@@ -113,6 +113,14 @@ Rust traits → TypeScript interfaces, Rust's ownership model → whatever memor
 management the language provides. The principles are language-agnostic; the examples
 are not.
 
+**Principle source.** The design-principle *statements* are the injected
+`bsky:load-design-principles` digest — the single source, loaded fresh each run. The lens
+checklists below are applied views: what each lens hunts for in *this* diff, not a
+restatement of the rules. When a check needs the full rule or its rationale (e.g.,
+`principle-non-vacuous-tests`, `principle-resource-lifecycle`, `principle-trace-the-wiring`,
+`principle-dependency-direction`, `principle-right-altitude`), the digest carries it —
+don't re-derive it here.
+
 Launch all five sub-agents concurrently via the dispatch backend (default:
 `bsky:elbow-grease-dispatch`, overridable with `--dispatch <skill-name>`). Each agent
 gets the same diff and context but a different analytical lens. The separation ensures

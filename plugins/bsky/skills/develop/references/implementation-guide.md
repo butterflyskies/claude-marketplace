@@ -43,8 +43,9 @@ review cycles — each one caused P1 or P2 findings that required fix-and-re-rev
    below it. Can any early return be reached after the acquisition fails? If so, defer
    acquisition until after the check.
 
-3. **Error path cleanup** — Stateful operations (git merge, transactions, temp files)
-   must clean up on ALL error paths, not just the happy path.
+3. **Error path cleanup** — apply `principle-resource-lifecycle` and
+   `principle-trace-the-wiring` to stateful operations (git merge, transactions, temp
+   files): cleanup must fire on every error path, not just the happy one.
    *Check:* for each state-entering call (e.g., `repo.merge()`), trace every `?` and
    `return Err(...)` between it and the corresponding cleanup call. If any error path
    skips cleanup, add a guard or an explicit cleanup-on-error block.
@@ -67,15 +68,16 @@ review cycles — each one caused P1 or P2 findings that required fix-and-re-rev
    could hold a URL (may contain `user:pass@`), token, or path to a secrets file. If
    found, redact before logging.
 
-7. **Domain result propagation** — When a function returns a rich result type (enum with
-   multiple variants), callers must handle all variants meaningfully.
+7. **Domain result propagation** — apply `principle-propagate-dont-swallow`: when a
+   function returns a rich result type (enum with multiple variants), callers must
+   handle every variant meaningfully rather than let one fall through.
    *Check:* for each call that returns an enum result, verify the caller inspects the
    variant. A `NoRemote` / `NotFound` / `Skipped` result that falls through to "proceed
    as normal" is a logic gap.
 
-8. **Resource lifecycle** — Every created resource (session, connection, handle, temp
-   file, cache entry) must have a corresponding cleanup path. If the resource is
-   externally triggered (e.g., client connections creating sessions), require a timeout
+8. **Resource lifecycle** — apply `principle-resource-lifecycle`: every created resource
+   (session, connection, handle, temp file, cache entry) needs a cleanup path, and an
+   externally-triggered one (e.g., client connections creating sessions) needs a timeout
    and/or cap.
    *Check:* for each long-lived resource created, trace what removes it. If nothing does,
    that's a memory leak. If it's externally triggered with no bound, that's a DoS vector.
@@ -107,10 +109,10 @@ review cycles — each one caused P1 or P2 findings that required fix-and-re-rev
     *Check:* for each old behavior identified, confirm there's a test that would fail if
     the new code omits it.
 
-12. **Design decisions up front** — Before implementing a feature gate, migration shim, or
-    backwards-compat layer, stop and ask: is the simpler design correct? "Just make it
-    public," "just delete the old code," or "just change the API" is often the right answer.
-    Don't implement complexity you'll retract in the next commit.
+12. **Design decisions up front** — apply `principle-right-altitude`: before implementing
+    a feature gate, migration shim, or backwards-compat layer, ask whether the simpler
+    design is correct. "Just make it public," "just delete the old code," or "just change
+    the API" is often the right answer; don't build complexity you'll retract next commit.
     *Check:* if you're about to add a `#[cfg(feature = "...")]` gate or a migration path,
     write down the simplest alternative that doesn't need it. If that alternative works,
     use it instead.
