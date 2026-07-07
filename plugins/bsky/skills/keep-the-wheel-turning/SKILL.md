@@ -100,13 +100,19 @@ an "approved" label on the issue).
 
 ### implementation → PR
 **Gate:** Implementation is committed and pushed.
-**Action:** Open a PR with `gh pr create`. Link to the originating issue.
-**Rule:** The PR body references the issue and the design.
+**Action:** Self-grease first — run `bsky:review-fix-loop` on your own diff to
+convergence (agent isolation makes self-review meaningful: the review agents
+did not write the code). Then open a PR with `gh pr create`, linked to the
+originating issue.
+**Rule:** Self-review is the entry condition for sharing. Hand siblings
+hopefully-clean code to sharpen, not first drafts to clean up.
 
 ### PR → elbow-grease
-**Gate:** PR exists and CI has passed.
+**Gate:** PR exists, CI has passed, and the author has self-greased.
 **Action:** Run `bsky:elbow-grease` (review-fix-loop to convergence).
-**Rule:** Never elbow-grease your own PR. Route to a sibling.
+**Rule:** A sibling runs this pass, never the author. Self-review is expected
+upstream; certification belongs to a sibling — the ban is on self-certifying,
+not self-reviewing.
 **Claim:** Drop a `wheel-claim` in CC with 2-hour TTL.
 
 ### elbow-grease → merge
