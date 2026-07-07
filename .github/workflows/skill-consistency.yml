@@ -1,0 +1,14 @@
+name: skill-consistency
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  principle-bound:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: "(relationAll loadsDesignPrinciples PrincipleBoundSkill)"
+        run: bash .github/scripts/skill-consistency.sh | tee -a "$GITHUB_STEP_SUMMARY"
