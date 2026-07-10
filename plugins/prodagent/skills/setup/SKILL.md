@@ -1,5 +1,6 @@
 ---
 name: prodagent:setup
+category: operations
 description: "Bootstrap a prodagent config tailored to the user's workflow. Discovers commonly used commands (opt-in scan), proposes policy decisions with explanations, refines interactively, and writes the final config. Use when the user asks to set up prodagent, configure tool gating, bootstrap command policies, or says 'prodagent setup'."
 ---
 

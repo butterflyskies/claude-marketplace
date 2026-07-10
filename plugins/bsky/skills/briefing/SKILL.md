@@ -1,5 +1,6 @@
 ---
 name: briefing
+category: operations
 description: "When requested: session-start situational awareness — notifications, PRs, tasks, and due follow-ups."
 ---
 

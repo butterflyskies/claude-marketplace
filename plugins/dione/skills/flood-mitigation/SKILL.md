@@ -1,5 +1,6 @@
 ---
 name: discord:flood-mitigation
+category: operations
 description: Circuit breaker for message floods. Use when dione messages are overwhelming your context — too many system reminders from one channel across multiple turns. Also callable proactively before known busy periods.
 ---
 
