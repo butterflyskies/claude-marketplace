@@ -192,7 +192,7 @@ Work through these with the user collaboratively:
 - **Type-driven design**: what invariants should the type system enforce, and which
   can be made structural (compiler/type-checker-enforced) rather than checked at
   runtime? Apply the loaded design principles here — `principle-make-illegal-states-unrepresentable`,
-  `principle-newtypes-over-primitives`, and traits/conversion-at-boundaries (`tmfdyut`) —
+  `principle-newtypes-over-primitives`, and traits/conversion-at-boundaries (`principle-traits-at-boundaries`) —
   mapped to the target language's type features (Rust newtypes, TS branded types,
   Python `NewType`; `From`/`Into`, type guards).
 - **Concurrency**: how will components that share state coordinate? Apply

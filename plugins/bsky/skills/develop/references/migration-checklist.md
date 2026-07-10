@@ -62,8 +62,7 @@ Ask explicitly:
 
 ### 6. Integration test the full pipeline
 
-Apply `principle-trace-the-wiring`: a mechanism proven by a unit test is not proven to
-be reached by production.
+Apply `principle-trace-the-wiring`:
 
 - Don't just unit-test the new component in isolation
 - Test the full flow that uses it: input → processing → output

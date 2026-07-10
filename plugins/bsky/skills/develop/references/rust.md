@@ -12,7 +12,7 @@ memory-mcp memory (scope: global) + user workflow preferences.
 5. Premature abstraction (`principle-right-altitude`) — don't introduce traits/generics
    until the pattern is clear from at least two concrete uses. But when a trait boundary
    or generic genuinely clarifies intent (e.g., `impl Read` expressing "any reader"), use
-   it (`tmfdyut`) — good generics make contracts explicit
+   it (`principle-traits-at-boundaries`) — good generics make contracts explicit
 6. Global mutable state — breaks testability and thread safety
 7. Macros that hide logic — keep logic visible and debuggable
 8. Ignoring lifetime annotations — but don't add them where not needed
