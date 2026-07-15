@@ -31,6 +31,18 @@ this review will seed it.
 | `commit <ref>`       | Single commit diff                            |
 | `--since <ref>`      | Incremental: only commits since `<ref>`       |
 
+### Dispatch backend
+
+`--dispatch <skill-name>` selects the sub-agent dispatch backend. Default:
+`bsky:elbow-grease-dispatch` (native Claude Agent tool).
+
+Any skill implementing the dispatch interface contract (see
+`bsky:elbow-grease-dispatch` for the specification) can be used. The orchestrator
+passes role, model, prompt, diff, context, and dismissed findings to the
+dispatch skill and receives structured findings back. This separation allows
+different billing paths, model providers, or execution environments without
+changing the review logic.
+
 ### Incremental review mode (`--since`)
 
 When `--since <commit-sha>` is appended to any scope argument (e.g., `branch --since abc123`),
@@ -83,14 +95,18 @@ Rust traits → TypeScript interfaces, Rust's ownership model → whatever memor
 management the language provides. The principles are language-agnostic; the examples
 are not.
 
-Launch all five sub-agents in a **single message** with five parallel Agent tool calls,
-each with `run_in_background: true`. This ensures true concurrent execution — launching
-them sequentially wastes time and defeats the purpose of independent analysis. Each agent
+Launch all five sub-agents concurrently via the dispatch backend (default:
+`bsky:elbow-grease-dispatch`, overridable with `--dispatch <skill-name>`). Each agent
 gets the same diff and context but a different analytical lens. The separation ensures
-independent findings — a bug one agent normalizes, another catches. Use **sonnet** for
-the **Correctness**, **Design**, and **Tests** sub-agents (mechanical analysis and test
-quality), **opus** for the **Architecture** and **Idiomacy** sub-agents (judgment-heavy
-architectural and idiomacy review).
+independent findings — a bug one agent normalizes, another catches.
+
+**Model assignment** (passed to the dispatch backend as generic names):
+- **sonnet**: Correctness, Design, and Tests sub-agents (mechanical analysis)
+- **opus**: Architecture and Idiomacy sub-agents (judgment-heavy review)
+
+The dispatch backend maps these generic names to provider-specific model IDs.
+When using the default `bsky:elbow-grease-dispatch`, these map to native Claude
+Agent tool calls with the corresponding model parameter.
 
 ### Correctness sub-agent
 
