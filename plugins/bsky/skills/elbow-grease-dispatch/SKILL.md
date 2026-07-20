@@ -1,10 +1,10 @@
 ---
-name: dispatch-subagent
+name: elbow-grease-dispatch
 category: infrastructure
 description: "Dispatch a code review sub-agent using native Claude Agent tool. Default dispatch backend for elbow-grease."
 ---
 
-# /dispatch-subagent — Native Claude Sub-Agent Dispatch
+# /elbow-grease-dispatch — Native Claude Sub-Agent Dispatch
 
 Dispatch a single code-review sub-agent using the Claude Agent tool. This is the
 default dispatch backend for `bsky:elbow-grease` and implements the dispatch interface
@@ -15,7 +15,7 @@ This skill is not intended to be called directly by users — it is invoked by
 
 ## Dispatch Interface Contract
 
-Any skill implementing this contract can replace `bsky:dispatch-subagent` as
+Any skill implementing this contract can replace `bsky:elbow-grease-dispatch` as
 the dispatch backend for `bsky:elbow-grease`. The contract:
 
 ### Input
@@ -72,10 +72,10 @@ provider), create a skill that:
 
 1. Accepts the same input fields (role, model, prompt, diff, context, dismissed)
 2. Returns findings in the same output format
-3. Names itself following the convention `<namespace>:dispatch-subagent`
+3. Names itself following the convention `<namespace>:elbow-grease-dispatch`
 
 The orchestrator (`bsky:elbow-grease`) accepts `--dispatch <skill-name>` to swap
-backends. The default is `bsky:dispatch-subagent` (this skill).
+backends. The default is `bsky:elbow-grease-dispatch` (this skill).
 
 ### Model mapping
 

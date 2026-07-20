@@ -34,10 +34,10 @@ this review will seed it.
 ### Dispatch backend
 
 `--dispatch <skill-name>` selects the sub-agent dispatch backend. Default:
-`bsky:dispatch-subagent` (native Claude Agent tool).
+`bsky:elbow-grease-dispatch` (native Claude Agent tool).
 
 Any skill implementing the dispatch interface contract (see
-`bsky:dispatch-subagent` for the specification) can be used. The orchestrator
+`bsky:elbow-grease-dispatch` for the specification) can be used. The orchestrator
 passes role, model, prompt, diff, context, and dismissed findings to the
 dispatch skill and receives structured findings back. This separation allows
 different billing paths, model providers, or execution environments without
@@ -96,7 +96,7 @@ management the language provides. The principles are language-agnostic; the exam
 are not.
 
 Launch all five sub-agents concurrently via the dispatch backend (default:
-`bsky:dispatch-subagent`, overridable with `--dispatch <skill-name>`). Each agent
+`bsky:elbow-grease-dispatch`, overridable with `--dispatch <skill-name>`). Each agent
 gets the same diff and context but a different analytical lens. The separation ensures
 independent findings — a bug one agent normalizes, another catches.
 
@@ -105,7 +105,7 @@ independent findings — a bug one agent normalizes, another catches.
 - **opus**: Architecture and Idiomacy sub-agents (judgment-heavy review)
 
 The dispatch backend maps these generic names to provider-specific model IDs.
-When using the default `bsky:dispatch-subagent`, these map to native Claude
+When using the default `bsky:elbow-grease-dispatch`, these map to native Claude
 Agent tool calls with the corresponding model parameter.
 
 ### Correctness sub-agent
