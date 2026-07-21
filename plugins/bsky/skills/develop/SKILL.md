@@ -67,8 +67,12 @@ Dispatch a **planning sub-agent** (model: opus) to:
 4. For each changed function/method signature, use `find_referencing_symbols` to find callers
 5. For stateful subsystems: identify resource lifecycle (creation → cleanup → limits).
    External connections/sessions require a timeout and max-count strategy in the plan.
-6. Propose an approach: what changes, in what order, and why
-7. Flag risks, ambiguities, or decisions that need user input
+6. Enumerate the properties and invariants to verify. Plan parameterized case matrices;
+   for broad domains, use generators with an independent model/oracle. For pure Rust
+   finite-state or type invariants, consider bounded Kani proofs; keep environmental
+   behavior in integration or fault-injection tests.
+7. Propose an approach: what changes, in what order, and why
+8. Flag risks, ambiguities, or decisions that need user input
 
 **Sub-agent prompt template:**
 ```

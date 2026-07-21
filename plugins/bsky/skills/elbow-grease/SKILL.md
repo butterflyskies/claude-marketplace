@@ -395,6 +395,19 @@ Review ALL tests in the diff (new and modified) for:
 - Are there negative tests — tests for what should NOT happen? (e.g., unauthorized
   access is rejected, invalid input is caught, duplicate operations are idempotent)
 
+**Properties, cases, and proof level**
+- Explicitly enumerate the properties and invariants the change must preserve before
+  judging coverage. Include boundaries, each branch or state transition, error paths,
+  concurrency where relevant, and negative properties such as rejection or idempotence.
+- Prefer parameterized/table-driven tests over repetitive examples of the same property.
+- For broad input spaces, prefer property-based generators checked against an independent
+  model or oracle. Reject tautological tests whose expected value comes from the production
+  code or restates its algorithm.
+- For Rust, recommend bounded Kani proofs when pure finite-state logic or type invariants
+  make them practical. Keep I/O, network, timing, and crash-recovery claims in integration
+  or fault-injection tests. Never claim a proof ran when it did not; report proposed or
+  unexecuted proof commands explicitly.
+
 **Test doubles vs production constraints**
 - If mocks, stubs, or test helpers are used: do they enforce the same invariants
   production code does? Dimension checks, format validation, size limits — if
