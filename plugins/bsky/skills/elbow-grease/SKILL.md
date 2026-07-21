@@ -43,6 +43,19 @@ dispatch skill and receives structured findings back. This separation allows
 different billing paths, model providers, or execution environments without
 changing the review logic.
 
+### Model override
+
+`--model <name>` overrides the default model for all five sub-agents. The name
+is passed through to the dispatch backend, which resolves it to a provider-specific
+model ID.
+
+When omitted, sub-agents use their default assignment (sonnet for mechanical
+analysis, opus for judgment-heavy review). When specified, all five sub-agents
+use the given model name instead.
+
+This parameter is designed for use by orchestrators like `multimodel-review` that
+invoke elbow-grease multiple times with different models to get cross-model coverage.
+
 ### Incremental review mode (`--since`)
 
 When `--since <commit-sha>` is appended to any scope argument (e.g., `branch --since abc123`),
