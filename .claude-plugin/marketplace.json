@@ -59,6 +59,12 @@
       "source": "./plugins/prodagent",
       "description": "Prodagent setup and configuration skills",
       "license": "MIT OR Apache-2.0"
+    },
+    {
+      "name": "construct",
+      "source": "./plugins/construct",
+      "description": "Construct continuity lifecycle starter skills — init (boot), pulse (upkeep), land (pre-clear)",
+      "license": "MIT OR Apache-2.0"
     }
   ]
 }
