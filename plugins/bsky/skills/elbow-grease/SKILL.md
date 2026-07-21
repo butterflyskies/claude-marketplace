@@ -43,6 +43,18 @@ dispatch skill and receives structured findings back. This separation allows
 different billing paths, model providers, or execution environments without
 changing the review logic.
 
+### Model override
+
+`--model <name>` overrides the default model for all five sub-agents. The name
+is passed through to the dispatch backend, which resolves it to a provider-specific
+model ID.
+
+When omitted, all sub-agents use `opus` (the default). When specified, all five
+sub-agents use the given model name instead.
+
+This parameter is designed for use by orchestrators like `multimodel-review` that
+invoke elbow-grease multiple times with different models to get cross-model coverage.
+
 ### Incremental review mode (`--since`)
 
 When `--since <commit-sha>` is appended to any scope argument (e.g., `branch --since abc123`),
@@ -106,8 +118,7 @@ gets the same diff and context but a different analytical lens. The separation e
 independent findings — a bug one agent normalizes, another catches.
 
 **Model assignment** (passed to the dispatch backend as generic names):
-- **sonnet**: Correctness, Design, and Tests sub-agents (mechanical analysis)
-- **opus**: Architecture and Idiomacy sub-agents (judgment-heavy review)
+- **opus**: all five sub-agents (default, overridable with `--model <name>`)
 
 The dispatch backend maps these generic names to provider-specific model IDs.
 When using the default `bsky:elbow-grease-dispatch`, these map to native Claude
@@ -205,7 +216,7 @@ For each finding, output EXACTLY this format:
 - Fix: <describe the concrete code change or approach — DO NOT implement it>
 ```
 
-### Architecture sub-agent (model: opus)
+### Architecture sub-agent
 
 ```
 You are reviewing code changes for architectural fitness and security. You did NOT
@@ -284,7 +295,7 @@ For each finding, output EXACTLY this format:
 - Fix: <describe the concrete code change or approach — DO NOT implement it>
 ```
 
-### Idiomacy sub-agent (model: opus)
+### Idiomacy sub-agent
 
 ```
 You are reviewing code changes for idiomatic language use and elegance. You did NOT
@@ -364,7 +375,7 @@ For each finding, output EXACTLY this format:
 - Fix: <describe the concrete code change or approach — DO NOT implement it>
 ```
 
-### Tests sub-agent (model: sonnet)
+### Tests sub-agent
 
 ```
 You are reviewing code changes exclusively for test quality. You did NOT write this
