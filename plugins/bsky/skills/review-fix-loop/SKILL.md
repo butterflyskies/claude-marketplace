@@ -1,12 +1,12 @@
 ---
 name: review-fix-loop
 category: code-review
-description: "Iterative code review to convergence. Runs bsky:elbow-grease, fixes findings, re-reviews, repeats until zero findings at or above the severity threshold."
+description: "Iterative code review to convergence. Runs bsky:multimodel-elbow-grease (3 models × 5 lenses), fixes findings, re-reviews, repeats until zero findings at or above the severity threshold."
 ---
 
 # /review-fix-loop — Iterative Code Review to Convergence
 
-Run `bsky:elbow-grease`, fix what it finds, re-review, repeat — until the diff is clean or
+Run `bsky:multimodel-elbow-grease`, fix what it finds, re-review, repeat — until the diff is clean or
 the round budget is exhausted. Each fix is a separate commit. Each re-review covers the
 full diff (not just the fix), catching regressions. The skill never merges — convergence
 means "ready for merge approval."
@@ -15,7 +15,7 @@ If a `required-environment-variables` memory exists (scope: global), read and ap
 before any git/gh operations.
 
 **This is a principle-bound skill.** First invoke `bsky:load-design-principles`
-and pass the returned digest to `bsky:elbow-grease` invocations and fix agents.
+and pass the returned digest to `bsky:multimodel-elbow-grease` invocations and fix agents.
 
 ## Arguments
 
@@ -29,7 +29,7 @@ and pass the returned digest to `bsky:elbow-grease` invocations and fix agents.
 | `--min-severity <level>` | `P3` | Fix findings at this level and above (`P1`, `P2`, or `P3`) |
 | `--fix-model <model>` | `sonnet` | Model for fix agents (`sonnet` or `opus`) |
 | `--standards <memory-ref>` | auto-detect | Load coding standards as context for review and fix agents. Auto-detects `coding-standards-<repo>` from collective-conscious if not specified. |
-| *(bare text)* | — | Passed through to `bsky:elbow-grease` as scope (e.g., `branch`, `pr`, `files src/**`) |
+| *(bare text)* | — | Passed through to `bsky:multimodel-elbow-grease` as scope (e.g., `branch`, `pr`, `files src/**`) |
 
 ### Argument parsing
 
@@ -95,13 +95,13 @@ Determine what to review and establish the working state.
 
 ## Phase 2: Review round
 
-Run `bsky:elbow-grease` on the target. This invokes the full elbow-grease skill with its
+Run `bsky:multimodel-elbow-grease` on the target. This invokes the full elbow-grease skill with its
 five parallel sub-agents, deduplication, and verification phases.
 
 ### First round
 
 ```
-bsky:elbow-grease <resolved-scope>
+bsky:multimodel-elbow-grease <resolved-scope>
 ```
 
 Where `<resolved-scope>` is:
@@ -112,7 +112,7 @@ Where `<resolved-scope>` is:
 ### Standards context for review
 
 If `$STANDARDS` is non-empty, pass the loaded coding standards as additional context
-to the `bsky:elbow-grease` invocation. Review agents should evaluate the diff against both
+to the `bsky:multimodel-elbow-grease` invocation. Review agents should evaluate the diff against both
 general code quality AND the project-specific standards. Include the standards in the
 review prompt preamble:
 
@@ -128,14 +128,14 @@ against these standards in addition to general code quality:
 Use incremental review mode to avoid re-reviewing unchanged code:
 
 ```
-bsky:elbow-grease <resolved-scope> --since <last-reviewed-commit>
+bsky:multimodel-elbow-grease <resolved-scope> --since <last-reviewed-commit>
 ```
 
 Pass the commit SHA recorded at the end of the previous round's fix phase.
 
 ### Capture findings
 
-After `bsky:elbow-grease` completes, collect its findings into a structured list.
+After `bsky:multimodel-elbow-grease` completes, collect its findings into a structured list.
 Each finding has: severity (P1/P2/P3), title, file:line, issue description,
 impact, and suggested fix.
 
@@ -290,7 +290,7 @@ Produce a structured convergence report. This is the primary output of the skill
 
 ### Post the report
 
-Follow the same posting hierarchy as `bsky:elbow-grease` Phase 5:
+Follow the same posting hierarchy as `bsky:multimodel-elbow-grease` Phase 5:
 1. If a PR exists: post as a PR comment (`gh pr comment <number> --body <report>`)
 2. Otherwise: display in-session
 
@@ -317,7 +317,7 @@ or ESCALATED results.
 - **Never runs fixes in parallel** — serial execution prevents conflicts when
   multiple findings touch the same file or interacting code paths.
 - **Full re-review after each round** — scoped re-review (only checking the fixed
-  finding) would miss regressions. The `--since` flag on `bsky:elbow-grease` provides
+  finding) would miss regressions. The `--since` flag on `bsky:multimodel-elbow-grease` provides
   efficiency without sacrificing coverage.
 - **Fix agents are disposable** — each gets a fresh context with only its finding
   and project conventions. No accumulated state across findings.
