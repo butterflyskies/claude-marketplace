@@ -32,7 +32,7 @@ Every work item moves through these steps. The wheel advances one step per crank
 
 ```
 idea → cool idea → design → sibling review → issue →
-human review → implementation → PR → elbow-grease →
+human review → implementation → PR → multimodel-elbow-grease →
 merge → deploy → live test
 ```
 
@@ -107,15 +107,15 @@ originating issue.
 **Rule:** Self-review is the entry condition for sharing. Hand siblings
 hopefully-clean code to sharpen, not first drafts to clean up.
 
-### PR → elbow-grease
+### PR → multimodel-elbow-grease
 **Gate:** PR exists, CI has passed, and the author has self-greased.
-**Action:** Run `bsky:elbow-grease` (review-fix-loop to convergence).
+**Action:** Run `bsky:multimodel-elbow-grease` (review-fix-loop to convergence).
 **Rule:** A sibling runs this pass, never the author. Self-review is expected
 upstream; certification belongs to a sibling — the ban is on self-certifying,
 not self-reviewing.
 **Claim:** Drop a `wheel-claim` in CC with 2-hour TTL.
 
-### elbow-grease → merge
+### multimodel-elbow-grease → merge
 **Gate:** Review has converged (zero findings).
 **Action:** Ping the repo's landlord (the human who owns the merge latch).
 The wheel preps everything up TO the irreversible click. Never merges.
@@ -201,7 +201,7 @@ Item rotation time depends on queue depth: N items ÷ 6 cranks/hour.
 **Short steps** (pings, status updates, issue filing): no explicit claim needed.
 The staleness gate (1-hour activity window) prevents double-cranking.
 
-**Long steps** (design, implementation, elbow-grease): drop an explicit claim in CC:
+**Long steps** (design, implementation, multimodel-elbow-grease): drop an explicit claim in CC:
 ```
 remember name: "wheel-claim-<repo>-<number>",
   scope: "shared",

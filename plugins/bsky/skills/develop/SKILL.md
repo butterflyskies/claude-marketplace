@@ -201,16 +201,16 @@ If the quality agent reports unfixed issues, present them to the user with optio
 
 ## Phase 4: Code review
 
-Invoke the `bsky:elbow-grease` skill with `branch` scope. It runs parallel sub-agents and
-produces deduplicated, verified findings.
-The `bsky:elbow-grease` skill is the single source of truth for review methodology — do not
-duplicate its logic here.
+Invoke the `bsky:multimodel-elbow-grease` skill with `branch` scope. It runs 3 models × 5
+lenses in parallel for cross-model coverage, then deduplicates with consensus scoring.
+The `bsky:multimodel-elbow-grease` skill is the single source of truth for review methodology
+— do not duplicate its logic here.
 
 ```
-bsky:elbow-grease branch
+bsky:multimodel-elbow-grease branch
 ```
 
-The elbow-grease skill will post findings to the PR if one exists, or display in-session.
+The multimodel-elbow-grease skill will post findings to the PR if one exists, or display in-session.
 Collect the findings from the review output.
 
 If there are any findings (P1, P2, or P3), proceed directly to Phase 4.5 — do not wait
@@ -233,7 +233,7 @@ When Phase 4 produces findings:
 2. After fixes are applied, dispatch the **quality sub-agent** (model: sonnet) again
    to verify fmt/clippy/tests still pass.
 
-3. Run `bsky:elbow-grease branch --since <last-reviewed-commit>` to use incremental review
+3. Run `bsky:multimodel-elbow-grease branch --since <last-reviewed-commit>` to use incremental review
    mode. This scopes the review to only the fix commits, verifies prior findings are
    resolved, and checks for new issues — without re-reviewing unchanged code.
    Record the HEAD commit SHA before each review round so you can pass it as `--since`
@@ -327,7 +327,7 @@ that should have caught the issue earlier.
 
 If the review produced verified P1 or P2 findings that reveal a **recurring pattern**
 (not a one-off bug), update the `code-review-patterns` memory (scope: global).
-This is delegated to `bsky:elbow-grease`'s Phase 6 when invoked through develop, but
+This is delegated to `bsky:multimodel-elbow-grease`'s Phase 6 when invoked through develop, but
 verify it happened — if the review skill skipped it, do it here.
 
 ## Language detection
