@@ -56,6 +56,7 @@ All arguments are passed through to each `bsky:elbow-grease` invocation:
 | Flag | Meaning |
 |------|---------|
 | `--models <list>` | Comma-separated model names (default: `opus,sonnet,fable`) |
+| `--passes <N>` | Independent review passes per model (default: `1`). Higher values reduce non-determinism noise at the cost of more sub-agents. |
 | `--dispatch <skill>` | Override dispatch backend for all invocations (e.g., `later:multimodel-dispatch` for Cursor CLI) |
 
 ## Usage
@@ -65,31 +66,58 @@ All arguments are passed through to each `bsky:elbow-grease` invocation:
 /multimodel-elbow-grease branch
 /multimodel-elbow-grease file src/main.rs
 /multimodel-elbow-grease pr 42 --models opus,fable
+/multimodel-elbow-grease pr 42 --passes 2
 ```
+
+### Sub-agent scaling
+
+| Passes | Models | Lenses | Total sub-agents |
+|--------|--------|--------|------------------|
+| 1 | 3 | 5 | 15 |
+| 2 | 3 | 5 | 30 |
+| 3 | 3 | 5 | 45 |
+
+**When to increase passes:** distribution testing shows P1/P2 findings converge
+across runs, but P3 suggestions vary due to LLM non-determinism. `--passes 2`
+is useful for high-stakes PRs where you want higher confidence that nothing was
+missed. `--passes 3` is overkill for most reviews.
 
 ## Implementation
 
 ### Step 1: Parse arguments
 
 Split `$ARGUMENTS` into:
-- **review args**: everything that is NOT `--models` or `--dispatch` (passed to elbow-grease)
+- **review args**: everything that is NOT `--models`, `--passes`, or `--dispatch` (passed to elbow-grease)
 - **models**: from `--models` or default `opus,sonnet,fable`
+- **passes**: from `--passes` or default `1`
 - **dispatch**: from `--dispatch` or default (native `bsky:elbow-grease-dispatch`)
 
 ### Step 2: Run elbow-grease per model (parallel)
 
-Invoke `bsky:elbow-grease` once per model. All invocations run concurrently.
+Invoke `bsky:elbow-grease` once per model per pass. All invocations run concurrently.
 
+With `--passes 1` (default):
 ```
-# All three run concurrently via Skill tool:
+# 3 concurrent invocations:
 bsky:elbow-grease <review-args> --model opus [--dispatch <dispatch>]
 bsky:elbow-grease <review-args> --model sonnet [--dispatch <dispatch>]
 bsky:elbow-grease <review-args> --model fable [--dispatch <dispatch>]
 ```
 
+With `--passes 2`:
+```
+# 6 concurrent invocations (2 per model):
+bsky:elbow-grease <review-args> --model opus [--dispatch <dispatch>]   # pass 1
+bsky:elbow-grease <review-args> --model opus [--dispatch <dispatch>]   # pass 2
+bsky:elbow-grease <review-args> --model sonnet [--dispatch <dispatch>] # pass 1
+bsky:elbow-grease <review-args> --model sonnet [--dispatch <dispatch>] # pass 2
+bsky:elbow-grease <review-args> --model fable [--dispatch <dispatch>]  # pass 1
+bsky:elbow-grease <review-args> --model fable [--dispatch <dispatch>]  # pass 2
+```
+
 Each `bsky:elbow-grease` invocation runs its own Phase 1–4 (gather context,
-analyze with 5 sub-agents, deduplicate & verify, report). This produces three
-independent review reports.
+analyze with 5 sub-agents, deduplicate & verify, report). Each produces an
+independent review report.
 
 **Dispatch behavior:** The `--model` flag tells elbow-grease to use that model
 for all five sub-agents instead of the default sonnet/opus split. The `--dispatch`
@@ -97,9 +125,9 @@ flag, if provided, overrides the dispatch backend for all invocations.
 
 ### Step 3: Cross-model synthesis
 
-After all three elbow-grease invocations complete:
+After all elbow-grease invocations complete:
 
-1. **Collect** all findings from the three reports
+1. **Collect** all findings from all reports
 2. **Match** findings across models by file path + line range + issue description.
    Two findings match if they identify the same underlying issue, even if worded
    differently. Use judgment, not exact string matching.
@@ -112,7 +140,11 @@ After all three elbow-grease invocations complete:
    - 2/3 models agree → medium confidence
    - 1/3 only → lower confidence (but still report — single-model findings
      are where the real value is, since they catch what others miss)
-5. **Report** in standard elbow-grease format with an added `Models:` line per finding
+   - When `--passes > 1`: findings that appear in N/N passes of the same model
+     get within-model consensus boost. Findings appearing across models AND
+     across passes get highest confidence.
+5. **Report** in standard elbow-grease format with an added `Models:` line per finding.
+   When `--passes > 1`, include pass count: `Models: opus (2/2), sonnet (1/2)`
 
 ### Output format
 
@@ -121,7 +153,7 @@ After all three elbow-grease invocations complete:
 
 ### Cross-Model Consensus
 
-N findings from 15 sub-agent reviews (5 lenses × 3 models)
+N findings from M sub-agent reviews (5 lenses × 3 models × P passes)
 - N findings flagged by all 3 models (high confidence)
 - N findings flagged by 2 models
 - N findings flagged by 1 model only
