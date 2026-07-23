@@ -25,7 +25,7 @@ The caller provides these values in `$ARGUMENTS` as a structured block:
 | Field | Type | Description |
 |-------|------|-------------|
 | `role` | string | Sub-agent role: `correctness`, `design`, `architecture`, `idiomacy`, or `tests` |
-| `model` | string | Model to use: `sonnet` for mechanical analysis, `opus` for judgment-heavy review |
+| `model` | string | Model to use for this sub-agent. Accepts any model name the dispatch backend supports (e.g., `sonnet`, `opus`, `fable`). When called by `bsky:elbow-grease` standalone, the per-lens default map applies (sonnet for mechanical analysis, opus for judgment-heavy review). When called via `bsky:multimodel-elbow-grease`, all lenses receive the same model name — this is intentional, producing cross-model consensus per lens. |
 | `prompt` | string | The full sub-agent prompt (role-specific review instructions) |
 | `diff` | string | The code diff to review |
 | `context` | string | Project conventions, symbol overview, caller info, patterns memory |
@@ -79,10 +79,17 @@ backends. The default is `bsky:elbow-grease-dispatch` (this skill).
 
 ### Model mapping
 
-Alternative backends may need to map the generic model names (`sonnet`, `opus`) to
-provider-specific model IDs. The mapping is the backend's responsibility — the
-orchestrator only knows generic names.
+Alternative backends may need to map generic model names to provider-specific
+model IDs. The mapping is the backend's responsibility — the orchestrator only
+knows generic names.
+
+The `model` field can be any name the backend supports. The default names used
+by `bsky:elbow-grease` standalone are `sonnet` and `opus` (per-lens routing).
+When invoked by `bsky:multimodel-elbow-grease`, the model name is whichever
+model that invocation is running (e.g., `opus`, `sonnet`, or `fable`) — all
+five lenses receive the same model.
 
 Example mapping for a Cursor CLI backend:
 - `sonnet` → `claude-4.6-sonnet-medium-thinking`
 - `opus` → `claude-opus-4-8-thinking-high`
+- `fable` → `claude-fable-5`

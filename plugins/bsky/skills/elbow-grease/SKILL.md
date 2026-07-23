@@ -119,8 +119,15 @@ gets the same diff and context but a different analytical lens. The separation e
 independent findings — a bug one agent normalizes, another catches.
 
 **Model assignment** (passed to the dispatch backend as generic names):
+
+When `--model` is NOT specified (standalone default):
 - **sonnet**: Correctness, Design, and Tests sub-agents (mechanical analysis)
 - **opus**: Architecture and Idiomacy sub-agents (judgment-heavy review)
+
+When `--model <name>` IS specified (e.g., by `bsky:multimodel-elbow-grease`):
+- All five sub-agents use the specified model, overriding the per-lens map above.
+  This produces a single-model review across all lenses, which multimodel then
+  repeats per model to get cross-model consensus per lens.
 
 The dispatch backend maps these generic names to provider-specific model IDs.
 When using the default `bsky:elbow-grease-dispatch`, these map to native Claude
