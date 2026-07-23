@@ -4,7 +4,8 @@ category: code-review
 description: >-
   Multi-model code review. Runs elbow-grease (5 lenses) across 3 models
   (opus, sonnet, fable) = 15 focused reviews, then deduplicates with
-  cross-model consensus scoring.
+  cross-model consensus scoring. Supports --passes N for repeated runs
+  per model to surface non-deterministic findings in the P3 tail.
 ---
 
 # Multi-Model Code Review
@@ -56,6 +57,7 @@ All arguments are passed through to each `bsky:elbow-grease` invocation:
 | Flag | Meaning |
 |------|---------|
 | `--models <list>` | Comma-separated model names (default: `opus,sonnet,fable`) |
+| `--passes <N>` | Run each model N times (default: `1`). More passes surface findings in the non-deterministic P3 tail. |
 | `--dispatch <skill>` | Override dispatch backend for all invocations (e.g., `later:multimodel-dispatch` for Cursor CLI) |
 
 ## Usage
@@ -65,31 +67,63 @@ All arguments are passed through to each `bsky:elbow-grease` invocation:
 /multimodel-elbow-grease branch
 /multimodel-elbow-grease file src/main.rs
 /multimodel-elbow-grease pr 42 --models opus,fable
+/multimodel-elbow-grease pr 42 --passes 3
 ```
+
+## Why `--passes` matters
+
+LLM reviews are non-deterministic. The same model, same prompt, same diff
+produces different findings on different runs. Empirical data from dione#215
+(PronounDB PR, 3 runs per model):
+
+```
+Run    Model    Findings  P1  P2  P3
+O-1    Opus     7         0   3   4
+O-2    Opus     8         0   3   5
+O-3    Opus     8         0   3   5
+S-1    Sonnet   6         1   4   1
+S-2    Sonnet   5         0   3   2
+S-3    Sonnet   6         0   3   3
+```
+
+Within-model variance is small (±1–2 findings). **P1/P2 core converges** — the
+important stuff shows up consistently across runs. **P3 tail is noise** — which
+suggestions get noticed vs. overlooked varies per run. Multiple passes surface
+stable findings in that tail without changing the model mix.
 
 ## Implementation
 
 ### Step 1: Parse arguments
 
 Split `$ARGUMENTS` into:
-- **review args**: everything that is NOT `--models` or `--dispatch` (passed to elbow-grease)
+- **review args**: everything that is NOT `--models`, `--passes`, or `--dispatch` (passed to elbow-grease)
 - **models**: from `--models` or default `opus,sonnet,fable`
+- **passes**: from `--passes` or default `1`
 - **dispatch**: from `--dispatch` or default (native `bsky:elbow-grease-dispatch`)
 
-### Step 2: Run elbow-grease per model (parallel)
+### Step 2: Run elbow-grease per model × passes (parallel)
 
-Invoke `bsky:elbow-grease` once per model. All invocations run concurrently.
+Invoke `bsky:elbow-grease` once per (model, pass) pair. All invocations run
+concurrently. With 3 models and passes=1 (default), this is 3 invocations (15
+sub-agents). With passes=3, it is 9 invocations (45 sub-agents).
 
 ```
-# All three run concurrently via Skill tool:
+# passes=1 (default): 3 concurrent invocations
 bsky:elbow-grease <review-args> --model opus [--dispatch <dispatch>]
 bsky:elbow-grease <review-args> --model sonnet [--dispatch <dispatch>]
 bsky:elbow-grease <review-args> --model fable [--dispatch <dispatch>]
+
+# passes=3: 9 concurrent invocations (3 per model)
+bsky:elbow-grease <review-args> --model opus [--dispatch <dispatch>]   # pass 1
+bsky:elbow-grease <review-args> --model opus [--dispatch <dispatch>]   # pass 2
+bsky:elbow-grease <review-args> --model opus [--dispatch <dispatch>]   # pass 3
+bsky:elbow-grease <review-args> --model sonnet [--dispatch <dispatch>] # pass 1
+# ... etc
 ```
 
 Each `bsky:elbow-grease` invocation runs its own Phase 1–4 (gather context,
-analyze with 5 sub-agents, deduplicate & verify, report). This produces three
-independent review reports.
+analyze with 5 sub-agents, deduplicate & verify, report). This produces
+`models × passes` independent review reports.
 
 **Dispatch behavior:** The `--model` flag tells elbow-grease to use that model
 for all five sub-agents instead of the default sonnet/opus split. The `--dispatch`
@@ -97,12 +131,12 @@ flag, if provided, overrides the dispatch backend for all invocations.
 
 ### Step 3: Cross-model synthesis
 
-After all three elbow-grease invocations complete:
+After all elbow-grease invocations complete:
 
-1. **Collect** all findings from the three reports
-2. **Match** findings across models by file path + line range + issue description.
-   Two findings match if they identify the same underlying issue, even if worded
-   differently. Use judgment, not exact string matching.
+1. **Collect** all findings from all reports
+2. **Match** findings across models and passes by file path + line range + issue
+   description. Two findings match if they identify the same underlying issue,
+   even if worded differently. Use judgment, not exact string matching.
 3. **Merge** matched findings into a single entry:
    - Use the clearest description from any model
    - List all models that flagged it: `[opus, sonnet]` or `[all three]`
@@ -112,7 +146,12 @@ After all three elbow-grease invocations complete:
    - 2/3 models agree → medium confidence
    - 1/3 only → lower confidence (but still report — single-model findings
      are where the real value is, since they catch what others miss)
-5. **Report** in standard elbow-grease format with an added `Models:` line per finding
+5. **Score within-model stability** (when passes > 1):
+   - Finding appears in N/N passes of a model → stable (core finding)
+   - Finding appears in 1/N passes only → volatile (P3 tail noise)
+   - Report stability alongside consensus: e.g., `opus (3/3), sonnet (2/3)`
+6. **Report** in standard elbow-grease format with `Models:` and `Stability:`
+   lines per finding (stability line only when passes > 1)
 
 ### Output format
 
@@ -121,7 +160,7 @@ After all three elbow-grease invocations complete:
 
 ### Cross-Model Consensus
 
-N findings from 15 sub-agent reviews (5 lenses × 3 models)
+N findings from M sub-agent reviews (5 lenses × 3 models [× P passes])
 - N findings flagged by all 3 models (high confidence)
 - N findings flagged by 2 models
 - N findings flagged by 1 model only
@@ -130,6 +169,7 @@ N findings from 15 sub-agent reviews (5 lenses × 3 models)
 
 **<title>** — `path/to/file.py:42`
 Models: opus, sonnet
+Stability: opus (3/3), sonnet (2/3)       ← only when --passes > 1
 <description with concrete fix>
 
 ### P2 — Important (N findings)
@@ -141,6 +181,9 @@ Models: opus, sonnet
 
 If there are zero findings at a severity level, omit that section entirely.
 If there are zero findings total, say so clearly.
+
+When `--passes > 1`, the header should report total sub-agent count
+(`5 × models × passes`) and include a stability summary alongside consensus.
 
 ## Relationship to other skills
 
@@ -155,6 +198,7 @@ skill repeatedly.
 ## Constraints
 
 - Use jq over python3 where possible
-- Don't run on trivial diffs (< 10 lines changed) — 15 agents is expensive
-- If elbow-grease fails for one model, report the failure and synthesize from the remaining models
+- Don't run on trivial diffs (< 10 lines changed) — 15 agents at passes=1 is already expensive
+- At passes=3, total sub-agents = 45. Warn the user before running passes > 2.
+- If elbow-grease fails for one model/pass, report the failure and synthesize from the remaining runs
 - Never merge, deploy, or self-certify
