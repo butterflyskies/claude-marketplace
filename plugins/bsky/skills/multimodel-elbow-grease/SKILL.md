@@ -125,9 +125,14 @@ Each `bsky:elbow-grease` invocation runs its own Phase 1–4 (gather context,
 analyze with 5 sub-agents, deduplicate & verify, report). This produces
 `models × passes` independent review reports.
 
-**Dispatch behavior:** The `--model` flag tells elbow-grease to use that model
-for all five sub-agents instead of the default sonnet/opus split. The `--dispatch`
-flag, if provided, overrides the dispatch backend for all invocations.
+**Dispatch behavior:** The `--model` flag overrides elbow-grease's per-lens
+model routing (sonnet for mechanical, opus for judgment-heavy). Each invocation
+runs all five lenses on a single model, so the multimodel spread produces
+cross-model consensus per lens — three independent opinions on correctness,
+three on architecture, etc. This is intentional: the per-lens routing is the
+standalone default for a single review; multimodel replaces it with the full
+cross-product for coverage. The `--dispatch` flag, if provided, overrides the
+dispatch backend for all invocations.
 
 ### Step 3: Cross-model synthesis
 
