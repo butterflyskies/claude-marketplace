@@ -121,8 +121,8 @@ independent findings — a bug one agent normalizes, another catches.
 **Model assignment** (passed to the dispatch backend as generic names):
 
 When `--model` is NOT specified (standalone default):
-- **sonnet**: Correctness, Design, and Tests sub-agents (mechanical analysis)
-- **opus**: Architecture and Idiomacy sub-agents (judgment-heavy review)
+- **sonnet**: Safety, Design, and Tests sub-agents (mechanical analysis)
+- **opus**: Security and Idiomacy sub-agents (judgment-heavy review)
 
 When `--model <name>` IS specified (e.g., by `bsky:multimodel-elbow-grease`):
 - All five sub-agents use the specified model, overriding the per-lens map above.
@@ -133,7 +133,7 @@ The dispatch backend maps these generic names to provider-specific model IDs.
 When using the default `bsky:elbow-grease-dispatch`, these map to native Claude
 Agent tool calls with the corresponding model parameter.
 
-### Correctness sub-agent
+### Safety
 
 ```
 You are reviewing code changes for correctness and safety issues. Precision matters
@@ -174,7 +174,7 @@ For each finding, output EXACTLY this format:
 - Fix: <describe the concrete code change or approach — DO NOT implement it>
 ```
 
-### Design sub-agent
+### Design
 
 ```
 You are reviewing code changes for design and maintainability issues. Precision matters
@@ -192,7 +192,12 @@ Review the following changes for:
 
 **Dead code & redundancy**
 - Code that the change made unreachable or unnecessary
-- Duplicated logic that should be consolidated
+- Scan the diff for repeated code patterns across different functions — blocks that
+  are distant in the full file often appear adjacent in a diff, making duplication
+  visible. Look for near-identical blocks with only minor variations (different
+  variable names, slightly different arguments, same control flow).
+- When you spot two blocks that do essentially the same thing, flag it — even if
+  they live in separate functions or handlers. Propose extracting the shared logic.
 - Imports, variables, enum variants, or parameters that are no longer used
 - For `Option`-guarded features: does disabling the feature leave allocated-but-unused
   fields? If so, group the feature's state into a sub-struct and wrap in `Option`.
@@ -225,7 +230,7 @@ For each finding, output EXACTLY this format:
 - Fix: <describe the concrete code change or approach — DO NOT implement it>
 ```
 
-### Architecture sub-agent (model: opus)
+### Security (model: opus)
 
 ```
 You are reviewing code changes for architectural fitness and security. You did NOT
@@ -304,7 +309,7 @@ For each finding, output EXACTLY this format:
 - Fix: <describe the concrete code change or approach — DO NOT implement it>
 ```
 
-### Idiomacy sub-agent (model: opus)
+### Idiomacy (model: opus)
 
 ```
 You are reviewing code changes for idiomatic language use and elegance. You did NOT
@@ -384,7 +389,7 @@ For each finding, output EXACTLY this format:
 - Fix: <describe the concrete code change or approach — DO NOT implement it>
 ```
 
-### Tests sub-agent (model: sonnet)
+### Tests (model: sonnet)
 
 ```
 You are reviewing code changes exclusively for test quality. You did NOT write this
@@ -439,6 +444,19 @@ Review ALL tests in the diff (new and modified) for:
 - When code has capacity limits, TTLs, or cleanup: is there a test that exceeds the
   limit and verifies eviction behavior? Not just "item is added" but "oldest item is
   removed when capacity is exceeded."
+
+**Integration test coverage for external APIs**
+- For any feature that talks to an external API (Discord, GitHub, webhooks, MCP
+  servers): are there integration tests or recorded-response tests — not just unit
+  tests with mocked response shapes? Unit tests that mock the HTTP response shape
+  verify parsing, not behavior. Flag when this is the ONLY test coverage.
+- Specifically check for: pagination (does page 2 return different results than
+  page 1?), auth flows (does token refresh work?), rate-limit handling (is retry-
+  after logic exercised?), and multi-step state (does create-then-update-then-delete
+  work end-to-end?).
+- If the project has no integration test infrastructure yet, flag the gap and
+  suggest what the first integration test should cover — the highest-risk API
+  interaction path (usually pagination or error recovery).
 
 For each finding, output EXACTLY this format:
 **[P1|P2|P3] <short title>**
@@ -515,26 +533,35 @@ After all five sub-agents return:
 
 ## Phase 3.5: Fix & re-review (autonomous loop)
 
-If any P1, P2, or P3 findings survived verification in Phase 3:
+If any P1, P2, or P3 findings survived verification in Phase 3, enter this loop.
+**Do not proceed to Phase 4 until the loop exits.**
 
-1. **Fix all findings** — implement the concrete fixes described in each finding.
-   Do not ask the user which findings to address. Fix all of them.
-2. **Commit the fixes** — create a new commit with a clear message describing what
-   was fixed (e.g., "fix: address PR #N review findings").
-3. **Re-run Phase 2** with `--since <previous-commit>` to get incremental review of
-   only the fix commits. Include the prior findings as "previously fixed" context so
-   sub-agents can verify fixes and check for regressions.
-4. **Repeat** — if the incremental review produces new findings, fix those and re-run.
-   Continue until a review round returns PASS (zero findings).
+```
+round = 1
+while findings exist:
+    1. Fix all findings from this round
+    2. Commit: "fix: address review findings (round N)"
+    3. Push the fix commit
+    4. Re-run Phase 2 with --since <previous-commit>
+       (incremental review of only the fix commits)
+    5. Re-run Phase 3 on the new results
+    6. If zero findings → PASS → exit loop
+    7. If findings remain → round += 1, continue loop
+    8. If stalemate (fix requires design change) → exit loop with rationale
+```
+
+<!-- Maintenance note: the while-loop pseudocode above is the mechanism that
+makes constructs actually re-review. A numbered list does not produce the loop.
+The callout below is redundant backup — keep both, but do NOT cut the loop.
+Proven via minimal-pair experiment 2026-07-03. -->
+
+**IMPORTANT — this is the step that gets skipped.** After step 2, you will feel
+done. You are not done. Step 4 (re-running the review on your fixes) is mandatory.
+Fixes introduce new issues more often than you expect. Do not report to the user
+until a clean round confirms the fixes are correct.
 
 This loop is autonomous — no user intervention between rounds. The user sees the
-final clean result, not each intermediate round. Each round should push the fix
-commit so the PR reflects the full review history.
-
-**Exit conditions:**
-- PASS — zero findings. Proceed to Phase 4 (Report).
-- Stalemate — a finding cannot be fixed without changing the design intent. Report
-  it as deferred with rationale and proceed to Phase 4.
+final clean result, not each intermediate round.
 
 ## Phase 4: Report
 
