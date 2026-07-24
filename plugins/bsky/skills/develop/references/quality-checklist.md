@@ -39,6 +39,13 @@ Examine the diff (`git diff`) for:
 - **Error handling**: swallowed errors, overly broad catches, missing propagation
 - **Test coverage**: every new branch/match arm should have a corresponding test.
   If a test is missing, write it.
+- **Verification design**: enumerate the properties and invariants under test. Cover each
+  branch/state transition and boundary with parameterized cases instead of repetitive examples.
+  For broad input spaces, use property generators checked by an independent model/oracle,
+  never expected values computed by production code.
+- **Proof level**: for pure Rust finite-state or type invariants, use bounded Kani proofs
+  where practical. Verify I/O, network, timing, and crash behavior with integration or
+  fault-injection tests. Report any proof command not executed as unexecuted, never passed.
 - **API surface**: any new public API should be intentional, not accidental
 
 ## Output format
