@@ -1,0 +1,8 @@
+{
+  "name": "construct",
+  "description": "Construct continuity lifecycle starter skills — boot (init), during-session upkeep (pulse), pre-clear landing (land)",
+  "author": {
+    "name": "butterflyskies"
+  },
+  "license": "MIT OR Apache-2.0"
+}
