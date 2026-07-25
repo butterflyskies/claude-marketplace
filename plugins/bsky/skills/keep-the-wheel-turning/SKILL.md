@@ -36,8 +36,8 @@ human review → implementation → PR → multimodel-elbow-grease →
 merge → deploy → live test
 ```
 
-Each step has a name. No numbers, no opaque identifiers — the step name IS the
-identifier.
+Each step has a name (`principle-meaningful-identifiers`). No numbers, no opaque
+identifiers — the step name IS the identifier.
 
 ## Yield Check
 

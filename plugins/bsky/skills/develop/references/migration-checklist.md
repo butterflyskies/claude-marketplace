@@ -62,6 +62,8 @@ Ask explicitly:
 
 ### 6. Integration test the full pipeline
 
+Apply `principle-trace-the-wiring`:
+
 - Don't just unit-test the new component in isolation
 - Test the full flow that uses it: input → processing → output
 - Compare outputs against the old implementation for representative inputs

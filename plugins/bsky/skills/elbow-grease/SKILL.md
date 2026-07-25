@@ -113,6 +113,14 @@ Rust traits → TypeScript interfaces, Rust's ownership model → whatever memor
 management the language provides. The principles are language-agnostic; the examples
 are not.
 
+**Principle source.** The design-principle *statements* are the injected
+`bsky:load-design-principles` digest — the single source, loaded fresh each run. The lens
+checklists below are applied views: what each lens hunts for in *this* diff, not a
+restatement of the rules. When a check needs the full rule or its rationale (e.g.,
+`principle-non-vacuous-tests`, `principle-resource-lifecycle`, `principle-trace-the-wiring`,
+`principle-dependency-direction`, `principle-right-altitude`), the digest carries it —
+don't re-derive it here.
+
 Launch all five sub-agents concurrently via the dispatch backend (default:
 `bsky:elbow-grease-dispatch`, overridable with `--dispatch <skill-name>`). Each agent
 gets the same diff and context but a different analytical lens. The separation ensures
@@ -209,11 +217,9 @@ Review the following changes for:
 
 **Test quality**
 - Do tests exercise the library's public API, or do they duplicate internal logic?
-  Tests that reimplement the production code path instead of calling it prove nothing
-  about the real code.
-- Are assertions non-vacuous? A test should fail if its assertion is removed. Tests
-  that compare single-element collections, assert `true`, or check trivially-true
-  conditions waste CI time and give false confidence.
+  (see digest: `principle-non-vacuous-tests`)
+- Vacuous assertions — see digest: `principle-non-vacuous-tests`; tells:
+  single-element comparisons, `assert true`, trivially-true conditions.
 - For edge-case tests: is the edge case actually exercised? Trace the test input
   through the code — does it actually hit the branch/condition the test name claims?
 

@@ -365,5 +365,5 @@ on the Agent tool to set each sub-agent's model explicitly.
   ambiguity downstream.
 - **Trust sub-agent output but verify P1s** — for critical findings, spot-check by
   reading the relevant code yourself before presenting to the user.
-- **No gold-plating** — implement what was asked, nothing more. If you see an improvement
-  opportunity, mention it; don't do it.
+- **No gold-plating** (`principle-right-altitude`) — implement what was asked, nothing
+  more. If you see an improvement opportunity, mention it; don't do it.

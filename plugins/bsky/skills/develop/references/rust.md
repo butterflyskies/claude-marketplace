@@ -9,10 +9,10 @@ memory-mcp memory (scope: global) + user workflow preferences.
 2. `.unwrap()`/`.expect()` overuse — use `unwrap_or`, `unwrap_or_default`, or propagate with `?`
 3. `.collect()` too early — prefer lazy iteration; only collect when multiple passes needed
 4. `unsafe` without clear need
-5. Premature abstraction — don't introduce traits/generics until the pattern is clear
-   from at least two concrete uses. But when a trait boundary or generic genuinely
-   clarifies intent (e.g., `impl Read` expressing "any reader"), use it — good generics
-   improve readability by making contracts explicit
+5. Premature abstraction (`principle-right-altitude`) — don't introduce traits/generics
+   until the pattern is clear from at least two concrete uses. But when a trait boundary
+   or generic genuinely clarifies intent (e.g., `impl Read` expressing "any reader"), use
+   it (`principle-traits-at-boundaries`) — good generics make contracts explicit
 6. Global mutable state — breaks testability and thread safety
 7. Macros that hide logic — keep logic visible and debuggable
 8. Ignoring lifetime annotations — but don't add them where not needed
@@ -23,7 +23,7 @@ memory-mcp memory (scope: global) + user workflow preferences.
 11. Feature gates for things that should just be `pub` — if the only consumer is tests,
     ask whether the item should simply be public. Don't implement `#[cfg(feature = "testing")]`
     if `pub` is the right answer.
-12. Vacuous test assertions — a test should fail if its assertion is removed. Tests that
+12. Vacuous test assertions (`principle-non-vacuous-tests`) — Rust tells: tests that
     compare single-element collections, assert `true`, or duplicate internal logic instead
     of using the library's public API prove nothing.
 13. `#[non_exhaustive]` on public enums or structs — banned across all projects
@@ -50,7 +50,7 @@ memory-mcp memory (scope: global) + user workflow preferences.
 
 ## Error handling
 
-- Propagate with `?` — don't swallow errors
+- Propagate with `?` — don't swallow errors (`principle-propagate-dont-swallow`)
 - Use `thiserror` for library error types, `anyhow` for application code
 - Include context in error messages: what failed and why
 - Match on error variants only when different recovery paths exist
