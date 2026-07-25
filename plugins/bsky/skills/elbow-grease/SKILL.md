@@ -47,12 +47,12 @@ changing the review logic.
 
 ### Model override
 
-`--model <name>` overrides the default model for all six sub-agents. The name
+`--model <name>` overrides the default model for all seven sub-agents. The name
 is passed through to the dispatch backend, which resolves it to a provider-specific
 model ID.
 
 When omitted, sub-agents use their default assignment (sonnet for mechanical
-analysis, opus for judgment-heavy review). When specified, all six sub-agents
+analysis, opus for judgment-heavy review). When specified, all seven sub-agents
 use the given model name instead.
 
 This parameter is designed for use by orchestrators like `multimodel-review` that
@@ -123,7 +123,7 @@ restatement of the rules. When a check needs the full rule or its rationale (e.g
 `principle-dependency-direction`, `principle-right-altitude`), the digest carries it —
 don't re-derive it here.
 
-Launch all six sub-agents concurrently via the dispatch backend (default:
+Launch all seven sub-agents concurrently via the dispatch backend (default:
 `bsky:elbow-grease-dispatch`, overridable with `--dispatch <skill-name>`). Each agent
 gets the same diff and context but a different analytical lens. The separation ensures
 independent findings — a bug one agent normalizes, another catches.
@@ -132,10 +132,10 @@ independent findings — a bug one agent normalizes, another catches.
 
 When `--model` is NOT specified (standalone default):
 - **sonnet**: Safety, Design, and Tests sub-agents (mechanical analysis)
-- **opus**: Security, Privacy, and Idiomacy sub-agents (judgment-heavy review)
+- **opus**: Security, Privacy, Idiomacy, and UX sub-agents (judgment-heavy review)
 
 When `--model <name>` IS specified (e.g., by `bsky:multimodel-elbow-grease`):
-- All six sub-agents use the specified model, overriding the per-lens map above.
+- All seven sub-agents use the specified model, overriding the per-lens map above.
   This produces a single-model review across all lenses, which multimodel then
   repeats per model to get cross-model consensus per lens.
 
@@ -576,6 +576,69 @@ For each finding, output EXACTLY this format:
 - Fix: <describe the concrete test to add or fix — DO NOT implement it>
 ```
 
+### UX (model: opus)
+
+```
+You are reviewing code changes for user experience at the interface boundary —
+error messages, feedback paths, status reporting, and failure-mode legibility.
+You did NOT write this code. Precision matters more than count. Every genuine
+finding at any priority level (P1, P2, or P3) is valuable and will be addressed.
+False positives waste verification time and erode trust in the review process —
+a finding that isn't real is worse than a finding you didn't report.
+
+Review the following changes for:
+
+**Does the failure path tell the user what to do next?**
+- Error messages, rejection notices, validation failures: does the message name
+  the problem AND the action? "Invalid input" tells someone what happened.
+  "Expected a number between 1 and 100" tells them what to fix.
+- CLI and API errors: does the output distinguish user error from system failure?
+  A typo and a crashed backend need different messages.
+- For gated/blocked actions: does the rejection explain WHY, not just WHAT matched?
+  A gate that names the rule it enforced teaches. One that names the pattern it
+  caught produces workarounds.
+
+**Is the needed information present at the moment it is needed?**
+- Does the user see relevant context at decision time, or must they look it up?
+- Are parsed/validated/enriched fields available where the user acts, or only
+  where the system stores them?
+- For multi-step flows: does each step carry forward the context the next step
+  needs, or does the user re-enter or re-find information?
+
+**Can the user distinguish two different failure modes?**
+- Do different error conditions produce different observable outputs? If two
+  failures look identical to the user, they cannot diagnose which one occurred.
+- Watch for: same HTTP status for different errors, same log message for different
+  causes, same UI state for success-with-no-results vs failure-to-query.
+- Return values that conflate "operation succeeded with empty result" and
+  "operation failed" — the caller cannot tell whether zero means zero or broken.
+
+**Does zero mean zero, or does it mean not-found / not-measured / not-applicable?**
+- Numeric fields where absence is represented as 0, -1, or an empty string instead
+  of Option/null/a dedicated sentinel with documented meaning.
+- Counters or metrics that cannot distinguish "measured and the count is zero" from
+  "not yet measured" or "measurement failed."
+- Boolean fields where false means both "evaluated to false" and "never evaluated."
+
+**Does silence carry unreadable meaning?**
+- Features that report via a channel the intended recipient cannot perceive (e.g.,
+  logging at a level nobody reads, reacting in a way the target cannot see, writing
+  to a location no consumer checks).
+- Missing output on success: does the user know it worked, or do they have to infer
+  success from the absence of failure?
+- Configuration gaps where a missing value produces no error and no warning — the
+  feature silently doesn't exist.
+- Absence of a log line, metric, or notification that looks identical to "nothing
+  happened" vs "the recorder is broken."
+
+For each finding, output EXACTLY this format:
+**[P1|P2|P3] <short title>**
+- File: `<path>:<line>`
+- Issue: <1-2 sentence description of what's wrong>
+- Impact: <what the user experiences or fails to understand>
+- Fix: <describe the concrete UX change — DO NOT implement it>
+```
+
 ### Providing context to sub-agents
 
 Each sub-agent receives:
@@ -612,9 +675,9 @@ not findings that were real and fixed (those belong in the "previously fixed" co
 
 ## Phase 3: Deduplicate & verify
 
-After all six sub-agents return:
+After all seven sub-agents return:
 
-1. **Merge findings** — combine all six agents' results, removing duplicates
+1. **Merge findings** — combine all seven agents' results, removing duplicates
 2. **Verify each finding** — for every P1 and P2, read the actual code to confirm
    the issue is real. LLM reviewers hallucinate findings; do not pass through
    unverified claims. Drop any finding you cannot confirm by reading the code.
