@@ -12,8 +12,10 @@ skills share one loading procedure instead of each carrying a copy that can drif
 ## Procedure
 
 1. **Read the bundled principles:** read every `.md` file in
-   `plugins/bsky/design-principles/v1/` (excluding `index.md`). These are the
-   canonical baseline — they work standalone with no external dependencies.
+   `../../design-principles/v1/` (relative to this skill's directory; i.e.
+   `plugins/bsky/design-principles/v1/` from the plugin root), excluding
+   `index.md`. These are the canonical baseline — they work standalone with no
+   external dependencies.
 
 2. **Phantom-set guard:** if the directory is empty or missing, STOP and flag it
    loudly — the principle set has gone phantom. Do not proceed as if the set

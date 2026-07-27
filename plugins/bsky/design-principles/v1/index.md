@@ -50,14 +50,17 @@ external memory system required.
 
 If you have access to a collective-conscious instance (or equivalent shared
 memory), you can overlay local norms on top of these baseline principles by
-recalling from CC with the relevant topic. The CC entries for these principles
+listing from CC and filtering by tag. The CC entries for these principles
 may contain house-specific worked examples, project-specific applications, or
 local amendments that don't belong in the public baseline. The bundled files
 are canonical; CC is an optional enrichment layer, not a requirement.
 
 To overlay:
 ```
-recall query: "<principle-name>", scope: "shared"
+list scope: "shared"
 ```
-Merge any house-specific guidance with the bundled principle before injecting
-into sub-agent prompts.
+Filter the results to memories whose `tags` include `principle`. For each CC
+memory that matches a bundled principle by name, merge any house-specific
+guidance into the bundled principle before injecting into sub-agent prompts.
+This uses deterministic tag filtering rather than semantic recall, so a newly
+added principle cannot fall outside top-N recall results.
