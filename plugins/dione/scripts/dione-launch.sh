@@ -21,8 +21,13 @@ if [ -n "${DIONE_RELAY_TARGET:-}" ]; then
   exec ssh -T \
     -i "${DIONE_RELAY_KEY:-/etc/construct/dione_relay}" \
     -o IdentitiesOnly=yes \
+    -o BatchMode=yes \
+    -o ConnectTimeout=10 \
+    -o ServerAliveInterval=30 \
+    -o ServerAliveCountMax=3 \
     -o StrictHostKeyChecking="${DIONE_RELAY_HOST_KEY_CHECKING:-accept-new}" \
     -o UserKnownHostsFile="${DIONE_RELAY_KNOWN_HOSTS:-$HOME/.ssh/known_hosts}" \
+    -o ClearAllForwardings=yes \
     "$DIONE_RELAY_TARGET"
   # NOTE: no trailing command. The host's authorized_keys forced-command decides
   # what runs, so anything sent here would be ignored — and relying on it would
