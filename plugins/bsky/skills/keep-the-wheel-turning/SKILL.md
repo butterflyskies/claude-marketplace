@@ -141,11 +141,11 @@ Each crank picks ONE item — the least-recently-touched eligible item across al
 butterflyskies repos.
 
 ```bash
-# Gather open PRs across the org
-gh search prs --owner butterflyskies --state open --json repository,number,title,updatedAt --limit 50
+# Gather open PRs across the org (skip archived repos)
+gh search prs --owner butterflyskies --state open --archived=false --json repository,number,title,updatedAt --limit 50
 
-# Gather open issues
-gh search issues --owner butterflyskies --state open --json repository,number,title,updatedAt --limit 50
+# Gather open issues (skip archived repos)
+gh search issues --owner butterflyskies --state open --archived=false --json repository,number,title,updatedAt --limit 50
 ```
 
 Also check:
