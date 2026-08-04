@@ -2,8 +2,8 @@
 name: multimodel-elbow-grease
 category: code-review
 description: >-
-  Multi-model code review. Runs elbow-grease (5 lenses) across 3 models
-  (opus, sonnet, fable) = 15 focused reviews, then deduplicates with
+  Multi-model code review. Runs elbow-grease (6 lenses) across 3 models
+  (opus, sonnet, fable) = 18 focused reviews, then deduplicates with
   cross-model consensus scoring. Supports --passes N for repeated runs
   per model to surface non-deterministic findings in the P3 tail.
 ---
@@ -11,14 +11,14 @@ description: >-
 # Multi-Model Code Review
 
 Run a structured code review through three LLM models, then synthesize the
-results with cross-model consensus. Each model runs all five review lenses
-independently, producing 15 focused reviews that are deduplicated and verified.
+results with cross-model consensus. Each model runs all six review lenses
+independently, producing 18 focused reviews that are deduplicated and verified.
 
 ## How it works
 
 This skill invokes `bsky:elbow-grease` three times — once per model — using
-native Claude Agent dispatch. Each invocation runs all five review lenses
-(correctness, design, architecture, idiomacy, tests) on a single model.
+native Claude Agent dispatch. Each invocation runs all six review lenses
+(correctness, design, architecture, privacy, idiomacy, tests) on a single model.
 
 Default models:
 
@@ -28,7 +28,7 @@ Default models:
 
 All three invocations run in parallel. The coordinator then:
 
-1. Collects all findings from all 15 sub-agent reviews
+1. Collects all findings from all 18 sub-agent reviews
 2. Deduplicates findings that describe the same issue across models
 3. Annotates each finding with which models flagged it
 4. Boosts confidence for findings with cross-model consensus (2+ models agree)
@@ -104,8 +104,8 @@ Split `$ARGUMENTS` into:
 ### Step 2: Run elbow-grease per model × passes (parallel)
 
 Invoke `bsky:elbow-grease` once per (model, pass) pair. All invocations run
-concurrently. With 3 models and passes=1 (default), this is 3 invocations (15
-sub-agents). With passes=3, it is 9 invocations (45 sub-agents).
+concurrently. With 3 models and passes=1 (default), this is 3 invocations (18
+sub-agents). With passes=3, it is 9 invocations (54 sub-agents).
 
 ```
 # passes=1 (default): 3 concurrent invocations
@@ -122,12 +122,12 @@ bsky:elbow-grease <review-args> --model sonnet [--dispatch <dispatch>] # pass 1
 ```
 
 Each `bsky:elbow-grease` invocation runs its own Phase 1–4 (gather context,
-analyze with 5 sub-agents, deduplicate & verify, report). This produces
+analyze with 6 sub-agents, deduplicate & verify, report). This produces
 `models × passes` independent review reports.
 
 **Dispatch behavior:** The `--model` flag overrides elbow-grease's per-lens
 model routing (sonnet for mechanical, opus for judgment-heavy). Each invocation
-runs all five lenses on a single model, so the multimodel spread produces
+runs all six lenses on a single model, so the multimodel spread produces
 cross-model consensus per lens — three independent opinions on correctness,
 three on architecture, etc. This is intentional: the per-lens routing is the
 standalone default for a single review; multimodel replaces it with the full
@@ -165,7 +165,7 @@ After all elbow-grease invocations complete:
 
 ### Cross-Model Consensus
 
-N findings from M sub-agent reviews (5 lenses × 3 models [× P passes])
+N findings from M sub-agent reviews (6 lenses × 3 models [× P passes])
 - N findings flagged by all 3 models (high confidence)
 - N findings flagged by 2 models
 - N findings flagged by 1 model only
@@ -188,7 +188,7 @@ If there are zero findings at a severity level, omit that section entirely.
 If there are zero findings total, say so clearly.
 
 When `--passes > 1`, the header should report total sub-agent count
-(`5 × models × passes`) and include a stability summary alongside consensus.
+(`6 × models × passes`) and include a stability summary alongside consensus.
 
 ## Relationship to other skills
 
@@ -203,7 +203,7 @@ skill repeatedly.
 ## Constraints
 
 - Use jq over python3 where possible
-- Don't run on trivial diffs (< 10 lines changed) — 15 agents at passes=1 is already expensive
-- At passes=3, total sub-agents = 45. Warn the user before running passes > 2.
+- Don't run on trivial diffs (< 10 lines changed) — 18 agents at passes=1 is already expensive
+- At passes=3, total sub-agents = 54. Warn the user before running passes > 2.
 - If elbow-grease fails for one model/pass, report the failure and synthesize from the remaining runs
 - Never merge, deploy, or self-certify

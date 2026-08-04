@@ -1,7 +1,7 @@
 ---
 name: review-fix-loop
 category: code-review
-description: "Iterative code review to convergence. Runs bsky:multimodel-elbow-grease (3 models × 5 lenses), fixes findings, re-reviews, repeats until zero findings at or above the severity threshold."
+description: "Iterative code review to convergence. Runs bsky:multimodel-elbow-grease (3 models × 6 lenses), fixes findings, re-reviews, repeats until zero findings at or above the severity threshold."
 ---
 
 # /review-fix-loop — Iterative Code Review to Convergence
@@ -96,7 +96,7 @@ Determine what to review and establish the working state.
 ## Phase 2: Review round
 
 Run `bsky:multimodel-elbow-grease` on the target. This invokes the full elbow-grease skill with its
-five parallel sub-agents, deduplication, and verification phases.
+six parallel sub-agents, deduplication, and verification phases.
 
 ### First round
 

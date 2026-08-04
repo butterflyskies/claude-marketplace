@@ -45,12 +45,12 @@ changing the review logic.
 
 ### Model override
 
-`--model <name>` overrides the default model for all five sub-agents. The name
+`--model <name>` overrides the default model for all six sub-agents. The name
 is passed through to the dispatch backend, which resolves it to a provider-specific
 model ID.
 
 When omitted, sub-agents use their default assignment (sonnet for mechanical
-analysis, opus for judgment-heavy review). When specified, all five sub-agents
+analysis, opus for judgment-heavy review). When specified, all six sub-agents
 use the given model name instead.
 
 This parameter is designed for use by orchestrators like `multimodel-review` that
@@ -121,7 +121,7 @@ restatement of the rules. When a check needs the full rule or its rationale (e.g
 `principle-dependency-direction`, `principle-right-altitude`), the digest carries it —
 don't re-derive it here.
 
-Launch all five sub-agents concurrently via the dispatch backend (default:
+Launch all six sub-agents concurrently via the dispatch backend (default:
 `bsky:elbow-grease-dispatch`, overridable with `--dispatch <skill-name>`). Each agent
 gets the same diff and context but a different analytical lens. The separation ensures
 independent findings — a bug one agent normalizes, another catches.
@@ -130,10 +130,10 @@ independent findings — a bug one agent normalizes, another catches.
 
 When `--model` is NOT specified (standalone default):
 - **sonnet**: Safety, Design, and Tests sub-agents (mechanical analysis)
-- **opus**: Security and Idiomacy sub-agents (judgment-heavy review)
+- **opus**: Security, Privacy, and Idiomacy sub-agents (judgment-heavy review)
 
 When `--model <name>` IS specified (e.g., by `bsky:multimodel-elbow-grease`):
-- All five sub-agents use the specified model, overriding the per-lens map above.
+- All six sub-agents use the specified model, overriding the per-lens map above.
   This produces a single-model review across all lenses, which multimodel then
   repeats per model to get cross-model consensus per lens.
 
@@ -306,6 +306,95 @@ Also check for concrete injection vectors:
 - Are there intermediate abstractions that exist only to serve this one use case?
 - Is there dead code from a previous approach that should be cleaned up?
 - Would a future reader understand this without the PR description?
+
+For each finding, output EXACTLY this format:
+**[P1|P2|P3] <short title>**
+- File: `<path>:<line>`
+- Issue: <1-2 sentence description of what's wrong>
+- Impact: <what breaks, and under what conditions>
+- Fix: <describe the concrete code change or approach — DO NOT implement it>
+```
+
+### Privacy (model: opus)
+
+```
+You are reviewing code changes for privacy exposure. You did NOT write this code
+and have NOT seen the authoring process — only the diff and the project structure.
+This separation is intentional: authors normalize the sensitivity of material they
+have been working with. Precision matters more than count. Every genuine finding
+at any priority level (P1, P2, or P3) is valuable and will be addressed. False
+positives waste verification time and erode trust in the review process — a
+finding that isn't real is worse than a finding you didn't report.
+
+This lens is distinct from Security. Security asks "can an unauthorized actor
+access this?" Privacy asks "should this audience, persistence layer, or aggregate
+exist at all?" A change can be perfectly secure — correct auth, no injection, no
+credential leaks — and still be a privacy failure because the data landed
+somewhere it should never have been written in the first place.
+
+Review the following changes for:
+
+**Data classification vs destination**
+- For each artifact added or modified: classify each content block (public,
+  internal, person-related, sensitive). Then check whether the DESTINATION's
+  visibility — public repo, private repo, shared channel — matches that
+  classification. A sensitive block in a shared destination is a finding
+  regardless of how it got there or how correct the surrounding code is.
+- Destination visibility is a property of the repo/channel, not the file. A
+  "docs" or "notes" file in a shared repo has the repo's audience, not the
+  author's intended one.
+
+**Aggregation check**
+- Does the change compile person-related material such that the aggregate is
+  more sensitive than any individual source line? Ten individually innocuous
+  facts about one person, co-located in one artifact, are a profile.
+- Review the full diff AS an aggregate, not suspicious lines one by one.
+  Line-by-line review is exactly how aggregation exposure passes: no single
+  line trips a threshold, and no reviewer ever holds the whole.
+
+**Derived-artifact taint**
+- Do summaries, extractions, renames, or generated files inherit their source's
+  sensitivity? A summary of a sensitive document is sensitive. An extraction
+  from a private channel carries the channel's classification with it.
+- Watch for laundering: compression, paraphrase, or renaming that strips the
+  markers of where content came from without changing what it discloses. If
+  the derived artifact's classification is lower than its source's, that drop
+  must be justified by what was removed, not by the transformation itself.
+
+**Person-profile content**
+- Person-profile material belongs behind a private reference (e.g.
+  `private_profile_ref`), never inline in shared repos.
+- Receipts, changelogs, and audit notes should be pointers, not transcription —
+  cite where the material lives, don't copy it to a new persistence layer.
+
+**Source consent and context**
+- Was the material shared in the context it's now leaving? Content offered in
+  one setting is not thereby licensed for every setting.
+- Aggregating someone's public statements into a dossier changes the class:
+  each statement was public, the compilation was not. Public-source is not a
+  privacy waiver for the aggregate.
+
+**Persistence and recoverability**
+- Deletion is not removal on hosted platforms. For anything sensitive that this
+  change writes (or previously wrote), account for: git history, dangling refs
+  and pull refs that survive branch deletion, logs, transcripts, caches, and
+  mirror/backup copies.
+- A "fixed" exposure that remains reachable through history or refs is still
+  open — flag it with the remediation path (history rewrite, platform support
+  request), not just the forward fix.
+
+**Deletion and disposition**
+- Does the change — or its revert path — leave residual copies anywhere? Name
+  the disposition for each copy: removed, rewritten out of history, retained
+  intentionally (with classification), or unrecoverable-by-us (needs platform
+  action).
+- "Deleted the file" without naming dispositions for history, refs, and
+  downstream copies is an incomplete fix.
+
+**Fail posture**
+- Unclassified person-related aggregates are treated as sensitive — fail
+  closed — pending explicit classification. "Probably fine" is not a
+  classification; the absence of a classification is itself a finding.
 
 For each finding, output EXACTLY this format:
 **[P1|P2|P3] <short title>**
@@ -521,9 +610,9 @@ not findings that were real and fixed (those belong in the "previously fixed" co
 
 ## Phase 3: Deduplicate & verify
 
-After all five sub-agents return:
+After all six sub-agents return:
 
-1. **Merge findings** — combine all five agents' results, removing duplicates
+1. **Merge findings** — combine all six agents' results, removing duplicates
 2. **Verify each finding** — for every P1 and P2, read the actual code to confirm
    the issue is real. LLM reviewers hallucinate findings; do not pass through
    unverified claims. Drop any finding you cannot confirm by reading the code.
