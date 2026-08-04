@@ -231,7 +231,7 @@ If the quality agent reports unfixed issues, present them to the user with optio
 
 ## Phase 4: Code review
 
-Invoke the `bsky:multimodel-elbow-grease` skill with `branch` scope. It runs 3 models × 5
+Invoke the `bsky:multimodel-elbow-grease` skill with `branch` scope. It runs 3 models × 6
 lenses in parallel for cross-model coverage, then deduplicates with consensus scoring.
 The `bsky:multimodel-elbow-grease` skill is the single source of truth for review methodology
 — do not duplicate its logic here.
