@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "target": "behavioral receipt addition for the five Syne-owned skill adaptations",
+  "reviewer": {
+    "identity": "current Codex coordinator",
+    "mode": "single-coordinator degraded",
+    "independent": false
+  },
+  "lens_results": [
+    {
+      "lens": "Safety",
+      "result": "PASS",
+      "evidence": "Receipts are inert JSON/Markdown; the oracle performs bounded local reads and assertions only."
+    },
+    {
+      "lens": "Design",
+      "result": "PASS",
+      "evidence": "Each claimed skill has one exact prompt, digest binding, observed result, evidence class, and limitation; executable assertions cover the workflow-specific invariants."
+    },
+    {
+      "lens": "Security",
+      "result": "PASS",
+      "evidence": "No credential, token, prompt body, rollout path, or authorization secret is stored; publication and activation remain separate gates."
+    },
+    {
+      "lens": "Privacy",
+      "result": "PASS_AFTER_FIX",
+      "evidence": "Removed the absolute host path and live per-request token counters from the public receipt; exact telemetry remains only in the local staging evidence and is neither copied nor fingerprinted in the PR."
+    },
+    {
+      "lens": "Idiomacy",
+      "result": "PASS",
+      "evidence": "Uses repository-native unittest discovery, JSON fixtures, pathlib, and deterministic SHA-256 binding for public candidate files."
+    },
+    {
+      "lens": "Tests",
+      "result": "PASS",
+      "evidence": "Seven behavioral-oracle tests cover scope, exact candidate digests, design alternatives, develop gates, wheel yielding, token privacy, and skill-forge publication/activation separation."
+    }
+  ],
+  "verified_findings": [
+    {
+      "severity": "Low",
+      "title": "Public behavioral receipt included unnecessary local-path and session-usage detail",
+      "lens": "Privacy",
+      "disposition": "FIXED",
+      "remedy": "Use repository-relative/worktree-class descriptions and retain only the supported aggregate field names in the public fixture."
+    }
+  ],
+  "dismissed_findings": [],
+  "residual_limits": [
+    "The review is six explicitly separated coordinator passes, not six independent agents.",
+    "The instruction-only forward exercises are same-coordinator evidence.",
+    "GitHub Actions has not produced a run for the draft PR; local validation is not represented as remote CI."
+  ],
+  "completion_receipt": "Lens coverage: Safety ✓ · Design ✓ · Security ✓ · Privacy ✓ · Idiomacy ✓ · Tests ✓ (single-coordinator degraded)"
+}

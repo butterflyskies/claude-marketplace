@@ -1,0 +1,179 @@
+{
+  "schema_version": 1,
+  "source_revision": "d29910dc302e8b7008df4b9fdc291a9cc9cad115",
+  "candidate_base_head": "6a3ffaae0dd12afcb7759bed6ee33814e2011e10",
+  "recorded_at": "2026-08-06T07:52:38.837000Z",
+  "executor": {
+    "kind": "current Codex coordinator",
+    "fresh_context": false,
+    "independent": false,
+    "limitation": "Instruction-only workflow receipts are exact same-coordinator forward exercises, not fresh-agent or independent-review evidence."
+  },
+  "cases": [
+    {
+      "skill": "design",
+      "skill_sha256": "a8e6a3214763279f9daef5603a145839391dc599bdc222440edf0a9fedcfc45a",
+      "evidence_class": "real_workflow",
+      "prompt": "Design the Codex parity package for the frozen Claude marketplace revision. Preserve portable behavior, surface viable topology alternatives including a materially cheaper option, keep activation separate, and provide traceable verification before implementation.",
+      "result": {
+        "depth": "standard",
+        "problem": "Codex lacked a native, reviewable package for the selected marketplace workflows; directly copying Claude mechanics would create unavailable-tool claims and unsafe publication or activation assumptions.",
+        "requirements": [
+          {"id": "PAR-1", "text": "Preserve each workflow's portable contract while replacing or narrowing harness-specific mechanics.", "test": "package contract and requirement/evidence matrix"},
+          {"id": "PAR-2", "text": "Keep install, activation, merge, deployment, and shared-name overwrite outside the adaptation's implied authority.", "test": "gate assertions and PREACTIVATION manifest"},
+          {"id": "PAR-3", "text": "Bind the generic review family to exactly six named lenses and Callisto's immutable fixture.", "test": "six-lens and handoff digest assertions"},
+          {"id": "PAR-4", "text": "Provide deterministic package validation plus behavioral evidence with limitations disclosed.", "test": "validators, unit tests, and this receipt oracle"}
+        ],
+        "alternatives": [
+          {
+            "name": "standalone staged skills",
+            "materially_cheaper": true,
+            "implementation_cost": "low",
+            "operating_cost": "manual discovery and no marketplace topology",
+            "failure_domains": "each copied skill can drift independently",
+            "reversibility": "delete the staging directory",
+            "migration_burden": "repeat packaging later",
+            "weaker_requirements": ["PAR-3", "PAR-4"]
+          },
+          {
+            "name": "Codex-native bsky-core plugin",
+            "materially_cheaper": false,
+            "implementation_cost": "moderate",
+            "operating_cost": "one manifest and one validation workflow",
+            "failure_domains": "plugin metadata or a shared internal dependency can affect the package",
+            "reversibility": "remove one unactivated package or revert one PR",
+            "migration_burden": "one reconciled package",
+            "weaker_requirements": []
+          }
+        ],
+        "recommendation": "Codex-native bsky-core plugin",
+        "recommendation_reason": "The extra topology earns its cost by making dependencies, validation, provenance, and rollback reviewable as one unactivated unit.",
+        "threat_model_decision": "lightweight",
+        "threats": [
+          "wrong GitHub actor publishing the candidate",
+          "a discovered path turning staging into accidental installation",
+          "shared-name activation overwriting Callisto's owned lane",
+          "structural checks being misreported as fresh behavioral evidence"
+        ],
+        "next_physical_action": "Implement only in the isolated Syne worktree, then validate before any separately authorized publication."
+      },
+      "verdict": "PASS"
+    },
+    {
+      "skill": "develop",
+      "skill_sha256": "0eac52ada22db0c0adbf3fc7f6f758a38d623a00f9bd347b137800a7e9d84499",
+      "evidence_class": "real_workflow",
+      "prompt": "Implement the reviewed Codex parity design in the isolated Syne worktree. Preserve frozen-source traceability, add tests for every authority boundary, reconcile Callisto's exact handoff, verify the package, and do not install, activate, merge, deploy, or overwrite a shared name.",
+      "result": {
+        "worktree": "isolated Syne worktree outside live skill roots",
+        "implementation_atoms": [
+          "create Codex plugin and marketplace metadata",
+          "adapt Syne's five skills and include required internal dependencies",
+          "bind generic elbow-grease and Callisto-owned review-family inputs",
+          "add deterministic validation, executable token tests, and behavioral receipts",
+          "publish only after separate authorization and exact actor verification"
+        ],
+        "changed_surfaces": [
+          ".agents/plugins/marketplace.json",
+          ".github/workflows/codex-plugin-validation.yml",
+          "plugins/bsky-core/.codex-plugin/plugin.json",
+          "plugins/bsky-core/skills/",
+          "plugins/bsky-core/tests/"
+        ],
+        "preserved_boundaries": {
+          "isolated_git_worktree": true,
+          "actor_verified_before_github_write": "butterflysky-syne",
+          "installed": false,
+          "activated": false,
+          "merged": false,
+          "deployed": false,
+          "live_shared_name_changed": false
+        },
+        "verification": [
+          "official plugin validator",
+          "official skill validator for all nine packaged skills",
+          "package contract tests",
+          "token-audit unit tests",
+          "token-audit live bound-session exercise",
+          "git diff --check"
+        ],
+        "review_limit": "Same-coordinator review is not independent; the draft PR remains open for external review.",
+        "next_physical_action": "Run the complete local suite and inspect PR checks and review threads without merging."
+      },
+      "verdict": "PASS"
+    },
+    {
+      "skill": "keep-the-wheel-turning",
+      "skill_sha256": "9282243cffdb81ceca262b4263e3df59dc1ee31dc403cf1b21252d5710f7d155",
+      "evidence_class": "synthetic_decision",
+      "prompt": "Normal crank. Candidate A is oldest but a human commented 12 minutes ago. Candidate B is next-oldest but CI is running. Candidate C is the oldest item clearing activity gates and is ready for issue → human review. Dione is configured, but there is no standing authorization matrix for outbound review requests and no atomic claim store. Advance the pipeline.",
+      "result": {
+        "scanned": [
+          {"item": "A", "yield_reason": "human freshness window"},
+          {"item": "B", "yield_reason": "CI in flight"},
+          {"item": "C", "yield_reason": null}
+        ],
+        "selected": "C",
+        "mode": "dry-run",
+        "advanced_items": 0,
+        "writes": [],
+        "proposed_nudge": "issue → human review",
+        "receipt": "🛞 skip | permission: no standing authorization matrix; dry-run selected C | candidate C",
+        "stopped_after_one_selection": true,
+        "reason": "A configured channel is not authorization, and the available store cannot provide atomic exclusion."
+      },
+      "verdict": "PASS"
+    },
+    {
+      "skill": "token-audit",
+      "skill_sha256": "4a060ff55570a8eba5c5e687ac21ec0f9af31fc39baf22fddd5f3571d4336a63",
+      "script_sha256": "fdc8d7dd820dba3faad488b3f61c21897a39f272cf7ec7b9e1e03a358df5aadc",
+      "evidence_class": "live_script",
+      "prompt": "Report the latest recorded aggregate token and rate-limit state for this exact Codex session. Do not expose prompt content and do not estimate cost or future burn.",
+      "result": {
+        "command": "python plugins/bsky-core/skills/token-audit/scripts/token_audit.py json",
+        "exit_code": 0,
+        "recorded_at": "2026-08-06T07:52:38.837000Z",
+        "current_session_verified": true,
+        "public_receipt_redacted": true,
+        "redaction_reason": "The public package proves aggregate-only behavior without publishing or fingerprinting a private session's usage counters.",
+        "aggregate_fields_present": [
+          "context_window",
+          "last_request",
+          "session_totals",
+          "rate_limits"
+        ],
+        "prompt_content_emitted": false,
+        "cost_or_burn_projection_emitted": false,
+        "isolated_tests": "7/7 PASS"
+      },
+      "verdict": "PASS"
+    },
+    {
+      "skill": "skill-forge",
+      "skill_sha256": "46b2f7a891dfd356ea9ae796ae15c3a76c575b4c6993f1366b59a7db2c4d4adb",
+      "evidence_class": "real_workflow",
+      "prompt": "Adapt Syne's five claimed Claude marketplace skills into Codex-native candidates, reconcile the canonical six-lens elbow-grease contract with Callisto, validate representative behavior, and—only after separate approval and exact actor verification—publish a draft PR. Do not install or activate anything.",
+      "result": {
+        "classification": "adapt then publish",
+        "destination": "plugins/bsky-core in an isolated Syne worktree",
+        "live_skill_root": false,
+        "system_skill_creator_used": true,
+        "plugin_creator_contract_used": true,
+        "source_frozen": "d29910dc302e8b7008df4b9fdc291a9cc9cad115",
+        "callisto_archive_sha256": "02694b68c457fa7ac8c625822470f2f922fb5229e5d52787189938834d8338fb",
+        "publication_authorized_separately": true,
+        "github_actor": "butterflysky-syne",
+        "draft_pr": "https://github.com/butterflyskies/claude-marketplace/pull/66",
+        "published_base_head": "6a3ffaae0dd12afcb7759bed6ee33814e2011e10",
+        "installed": false,
+        "activated": false,
+        "merged": false,
+        "shared_name_overwritten": false,
+        "structural_validation": "PASS",
+        "behavioral_limit": "Workflow exercises are same-coordinator unless a case explicitly identifies executable evidence."
+      },
+      "verdict": "PASS"
+    }
+  ]
+}

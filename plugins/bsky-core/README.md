@@ -31,6 +31,10 @@ python -m unittest discover -s plugins/bsky-core/tests -v
 python -m unittest discover -s plugins/bsky-core/skills/token-audit/tests -v
 ```
 
+Exact same-coordinator behavioral receipts and their executable oracle live in
+[`tests/behavioral/`](tests/behavioral/). They disclose their independence
+limit and keep private live-session counters out of the public package.
+
 The system `plugin-creator` validator and `skill-creator` validator are also run
 before publication when those tools are available. Structural validation does
 not substitute for fresh-agent behavioral evidence.
