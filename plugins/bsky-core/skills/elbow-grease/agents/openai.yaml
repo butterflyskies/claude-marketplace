@@ -1,0 +1,4 @@
+interface:
+  display_name: "Elbow Grease"
+  short_description: "Run a rigorous independent six-lens review"
+  default_prompt: "Use $elbow-grease to review this change and report only verified findings."

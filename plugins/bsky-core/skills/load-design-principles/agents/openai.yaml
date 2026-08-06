@@ -1,0 +1,4 @@
+interface:
+  display_name: "Load Design Principles"
+  short_description: "Load applicable shared design principles"
+  default_prompt: "Use $load-design-principles to gather all applicable design principles before planning."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Keep the Wheel Turning"
+  short_description: "Advance one eligible pipeline item safely"
+  default_prompt: "Use $keep-the-wheel-turning to inspect the pipeline and advance one eligible item."

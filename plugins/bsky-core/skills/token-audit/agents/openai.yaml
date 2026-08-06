@@ -1,0 +1,4 @@
+interface:
+  display_name: "Token Audit"
+  short_description: "Inspect current Codex token and limit usage"
+  default_prompt: "Use $token-audit to inspect this Codex session token usage and rate limits."

@@ -1,0 +1,20 @@
+{
+  "name": "butterflyskies",
+  "interface": {
+    "displayName": "Butterflyskies"
+  },
+  "plugins": [
+    {
+      "name": "bsky-core",
+      "source": {
+        "source": "local",
+        "path": "./plugins/bsky-core"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_USE"
+      },
+      "category": "development"
+    }
+  ]
+}
