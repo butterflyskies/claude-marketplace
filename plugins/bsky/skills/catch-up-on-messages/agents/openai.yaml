@@ -1,0 +1,4 @@
+interface:
+  display_name: "Catch Up on Messages"
+  short_description: "Low-fatigue catch-up with opt-in charged detail"
+  default_prompt: "Use $catch-up-on-messages to summarize what I missed with safe, user-controlled reveal steps."
