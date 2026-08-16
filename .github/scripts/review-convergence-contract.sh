@@ -4,6 +4,25 @@ set -euo pipefail
 ROOT=$(git rev-parse --show-toplevel)
 ELBOW=${1:-"$ROOT/plugins/bsky/skills/elbow-grease/SKILL.md"}
 LOOP=${2:-"$ROOT/plugins/bsky/skills/review-fix-loop/SKILL.md"}
+WORKFLOW=${3:-"$ROOT/.github/workflows/skill-consistency.yml"}
+
+validate_workflow() {
+  local workflow=$1
+
+  step_has_pipefail() {
+    local step_name=$1
+    awk -v step_name="$step_name" '
+      index($0, "- name: \"" step_name "\"") { inside = 1; next }
+      inside && /^[[:space:]]+- name:/ { inside = 0 }
+      inside && /set -o pipefail/ { guards++ }
+      inside && /\| tee/ { pipeline = 1 }
+      END { exit(guards == 1 && pipeline ? 0 : 1) }
+    ' "$workflow"
+  }
+
+  step_has_pipefail '(relationAll loadsDesignPrinciples PrincipleBoundSkill)' || return 1
+  step_has_pipefail 'Review convergence contract' || return 1
+}
 
 validate_contract() {
   local elbow=$1
@@ -93,6 +112,7 @@ expect_rejection() {
   echo "PASS: invalid fixture rejected: $label"
 }
 
+validate_workflow "$WORKFLOW"
 validate_contract "$ELBOW" "$LOOP"
 echo 'PASS: live review skills satisfy the convergence contract'
 
@@ -175,3 +195,17 @@ expect_rejection 'stage-all admits unreviewed paths' "$ELBOW" "$SCRATCH/stage-al
 sed 's/justified paths created or modified by fix agents/justified paths created by fix agents/' \
   "$LOOP" >"$SCRATCH/no-existing-caller-path.md"
 expect_rejection 'existing caller fix excluded from scope' "$ELBOW" "$SCRATCH/no-existing-caller-path.md"
+
+awk '
+  /set -o pipefail/ {
+    guards++
+    if (guards == 1) { print; print; next }
+    if (guards == 2) { next }
+  }
+  { print }
+' "$WORKFLOW" >"$SCRATCH/misplaced-pipefail.yml"
+if validate_workflow "$SCRATCH/misplaced-pipefail.yml"; then
+  echo 'FAIL: invalid fixture accepted: both pipefail guards in one workflow step' >&2
+  exit 1
+fi
+echo 'PASS: invalid fixture rejected: both pipefail guards in one workflow step'
