@@ -1,7 +1,7 @@
 ---
 name: review-fix-loop
 category: code-review
-description: "Iterative code review to convergence. Runs bsky:multimodel-elbow-grease (3 models × 6 lenses), fixes findings, re-reviews, repeats until zero findings at or above the severity threshold."
+description: "Iterative code review to convergence. Runs bsky:multimodel-elbow-grease (3 models × 6 lenses), fixes findings, and re-reviews the exact post-fix head until zero confirmed findings remain at every severity."
 ---
 
 # /review-fix-loop — Iterative Code Review to Convergence
@@ -12,7 +12,7 @@ full diff (not just the fix), catching regressions. The skill never merges — c
 means "ready for merge approval."
 
 If a `required-environment-variables` memory exists (scope: global), read and apply it
-before any git/gh operations.
+before any git or provider-native repository operations.
 
 **This is a principle-bound skill.** First invoke `bsky:load-design-principles`
 and pass the returned digest to `bsky:multimodel-elbow-grease` invocations and fix agents.
@@ -26,7 +26,6 @@ and pass the returned digest to `bsky:multimodel-elbow-grease` invocations and f
 | `--pr <number>` | current branch's PR | Review a specific PR |
 | `--repo <owner/repo>` | current repo | Target repo (for cross-repo PRs) |
 | `--max-rounds <N>` | `5` | Maximum review-fix iterations before stopping |
-| `--min-severity <level>` | `P3` | Fix findings at this level and above (`P1`, `P2`, or `P3`) |
 | `--fix-model <model>` | `sonnet` | Model for fix agents (`sonnet` or `opus`) |
 | `--standards <memory-ref>` | auto-detect | Load coding standards as context for review and fix agents. Auto-detects `coding-standards-<repo>` from collective-conscious if not specified. |
 | *(bare text)* | — | Passed through to `bsky:multimodel-elbow-grease` as scope (e.g., `branch`, `pr`, `files src/**`) |
@@ -45,29 +44,31 @@ echo "$ARGUMENTS" | jq -Rr 'split(" ") | to_entries
 
 Defaults when no scope is specified:
 - If `--pr` is given: review that PR
-- If on a branch with an open PR: review that PR (`gh pr list --head <branch> --state open --json number --jq '.[0].number'`)
-- Otherwise: review all uncommitted changes (staged + unstaged)
+- If on a branch with an open PR: review that PR using the provider-native client
+- Otherwise: review all uncommitted changes (staged + unstaged + untracked)
+
+Detect the provider from configured remotes. Use `gh` for GitHub and `tea` for
+Forgejo through already configured authentication profiles. Never put tokens inline
+in command arguments, URLs, environment assignments, or generated review text.
+Before any provider write, verify the authenticated actor identity through the exact
+client, auth profile, and repository context that will perform the write. Require it
+to match the intended actor; successful authentication alone is not identity proof.
+Stop on an unknown or mismatched actor.
 
 ## Phase 1: Resolve target
 
 Determine what to review and establish the working state.
 
 1. **Parse arguments** — extract flags, identify review scope
-2. **Resolve the PR** (if applicable):
-   ```bash
-   # If --pr given:
-   gh pr view <number> --repo <repo> --json number,headRefName,baseRefName,url
-   # If no --pr, check current branch:
-   gh pr list --head "$(git branch --show-current)" --state open --json number,url --jq '.[0]'
-   ```
-3. **Check out the branch** — if reviewing a PR and not already on its branch:
-   ```bash
-   gh pr checkout <number> --repo <repo>
-   ```
-4. **Record the starting commit** — this is the baseline for the first review:
-   ```bash
-   git rev-parse HEAD
-   ```
+2. **Resolve the PR** (if applicable) with the provider-native client
+3. **Check out the branch** — if reviewing a PR and not already on its branch,
+   use the provider-native client or an authenticated git fetch
+4. **Record the base commit and review artifact ID** — retain `git rev-parse HEAD`
+   as the base for an initially uncommitted scope. For committed PR/branch scope, use its exact
+   commit SHA. For staged, unstaged, or untracked scope, compute a deterministic
+   identity from the base HEAD plus every in-scope path, mode, and byte, including
+   untracked files. This identifies the bytes actually reviewed rather than merely
+   their base commit.
 5. **Load coding standards** — these are passed to review and fix agents as context:
    - If `--standards <memory-ref>` was provided, load that specific memory:
      ```
@@ -88,7 +89,6 @@ Determine what to review and establish the working state.
    ```
    Target: PR #42 (owner/repo) | branch: feat/thing
    Max rounds: 5
-   Min severity: P3
    Fix model: sonnet
    Standards: coding-standards-my-repo (or: <explicit ref> | none)
    ```
@@ -100,6 +100,10 @@ six parallel sub-agents, deduplication, and verification phases.
 
 ### First round
 
+Record the review artifact ID immediately before dispatch. Immediately after the
+review returns, recompute it and require equality. On drift, discard the round and
+restart on the new artifact.
+
 ```
 bsky:multimodel-elbow-grease <resolved-scope>
 ```
@@ -107,7 +111,13 @@ bsky:multimodel-elbow-grease <resolved-scope>
 Where `<resolved-scope>` is:
 - `pr <number>` if reviewing a PR
 - `branch` if reviewing a branch
-- (empty) if reviewing uncommitted changes
+- (empty) if reviewing uncommitted changes in the first round
+
+If an initially uncommitted scope produces fixes that are committed, change
+`<resolved-scope>` for every subsequent convergence round to
+`commits <recorded-base>..<exact-post-fix-SHA>`. This preserves the entire original
+reviewed diff plus every fix; an empty scope after committing is never a valid
+convergence review.
 
 ### Standards context for review
 
@@ -125,13 +135,21 @@ against these standards in addition to general code quality:
 
 ### Subsequent rounds
 
-Use incremental review mode to avoid re-reviewing unchanged code:
+Record the exact post-fix SHA, assert it is the checked-out head, then review the full
+original scope at that SHA:
 
 ```
-bsky:multimodel-elbow-grease <resolved-scope> --since <last-reviewed-commit>
+bsky:multimodel-elbow-grease <resolved-scope>
 ```
 
-Pass the commit SHA recorded at the end of the previous round's fix phase.
+Pass the recorded SHA and prior finding ledger as context, not as a diff restriction.
+Do not use `--since` for convergence review. Convergence requires a full-scope review
+of the exact post-fix SHA.
+
+Immediately after the review returns, re-read the checked-out local head and the
+provider PR head when a PR is in scope. Both must still equal the recorded SHA. If
+either moved, discard that round's result, resolve and record the new head, and restart
+the full-scope review. Never report convergence from findings computed across head drift.
 
 ### Capture findings
 
@@ -139,17 +157,16 @@ After `bsky:multimodel-elbow-grease` completes, collect its findings into a stru
 Each finding has: severity (P1/P2/P3), title, file:line, issue description,
 impact, and suggested fix.
 
-Partition findings into two buckets:
-- **actionable**: severity >= `--min-severity` threshold
-- **noted**: severity < threshold (reported but not fixed)
-
-Severity ordering: P1 > P2 > P3. With `--min-severity P2`, P1 and P2 are
-actionable; P3 is noted. With `--min-severity P3` (default), everything is
-actionable.
+Record every candidate with a typed disposition. During verification the allowed
+states are `confirmed`, `rejected_with_evidence`, and `duplicate`. Every confirmed
+P1, P2, and P3 finding is actionable. Terminal dispositions are only `fixed`,
+`rejected_with_evidence`, or `duplicate`; `non-blocking`, `benign`, and
+`accepted risk` are impact labels, not dispositions.
 
 ## Phase 3: Fix
 
-If there are zero actionable findings, skip to Phase 5 (converged).
+If there are zero confirmed findings at every severity on the exact reviewed artifact,
+skip to Phase 5 (converged).
 
 For each actionable finding, **serially** (not in parallel — order matters for
 files that have multiple findings):
@@ -163,9 +180,13 @@ files that have multiple findings):
    - The agent reads the relevant code, implements the fix, and verifies it
      compiles/passes lint
 
-2. **Commit the fix** — one finding, one commit:
+2. **Commit the fix** — maintain a path allowlist containing the initial review
+   artifact's paths plus justified paths created or modified by fix agents. Add every
+   such path to the subsequent full-scope review. Refuse unrelated
+   concurrent paths, stage only that allowlist (never `git add -A`), then create one
+   finding per commit:
    ```bash
-   git add -A
+   git add -- <reviewed-and-fix-paths...>
    git commit -m "$(cat <<'EOF'
    fix: <finding-title>
 
@@ -222,9 +243,9 @@ merge conflicts between sequential commits).
 
 ## Phase 4: Evaluate exit conditions
 
-After all actionable findings from this round have been processed:
+After all confirmed findings from this round have been processed:
 
-1. **Record the post-fix commit**:
+1. **Record the exact post-fix commit**:
    ```bash
    git rev-parse HEAD
    ```
@@ -242,11 +263,10 @@ After all actionable findings from this round have been processed:
    | Round count >= `--max-rounds` | **Exit: stalled.** Report remaining findings. |
    | Otherwise | **Continue to Phase 2** (next review round). |
 
-4. **Increment round counter** and loop back to Phase 2 for a full re-review.
+4. **Increment round counter** and loop back to Phase 2 for a full-scope re-review
+   of that exact post-fix SHA.
 
-The re-review is deliberately full-scope (with `--since` for efficiency, but the
-elbow-grease skill's incremental mode still verifies prior findings are resolved
-and checks for regressions). This catches:
+The re-review is deliberately full-scope and does not use `--since`. This catches:
 - Fixes that introduced new bugs
 - Fixes that resolved one finding but exposed another
 - Interaction effects between multiple fixes
@@ -270,15 +290,9 @@ Produce a structured convergence report. This is the primary output of the skill
 
 ### Final state
 - **Status**: Converged after 3 rounds
+- **Reviewed artifact**: `<commit SHA or immutable worktree artifact ID, re-verified after review>`
 - **Commits**: 5 fix commits on branch `feat/thing`
-- **Noted (below threshold)**: <N findings reported but not fixed>
 - **Escalated**: <N P1s that could not be resolved>
-
-### Noted findings (not fixed)
-<only present if --min-severity excluded some findings>
-
-**[P3] <title>** — `file:line`
-<description>
 
 ### Escalated findings (needs human review)
 <only present if P1 escalations occurred>
@@ -291,7 +305,7 @@ Produce a structured convergence report. This is the primary output of the skill
 ### Post the report
 
 Follow the same posting hierarchy as `bsky:multimodel-elbow-grease` Phase 5:
-1. If a PR exists: post as a PR comment (`gh pr comment <number> --body <report>`)
+1. If a PR exists: post as a PR comment with the provider-native client
 2. Otherwise: display in-session
 
 ## Composability
@@ -317,8 +331,8 @@ or ESCALATED results.
 - **Never runs fixes in parallel** — serial execution prevents conflicts when
   multiple findings touch the same file or interacting code paths.
 - **Full re-review after each round** — scoped re-review (only checking the fixed
-  finding) would miss regressions. The `--since` flag on `bsky:multimodel-elbow-grease` provides
-  efficiency without sacrificing coverage.
+  finding) would miss regressions. Do not use `--since` for convergence review;
+  review the full original scope at the exact post-fix SHA.
 - **Fix agents are disposable** — each gets a fresh context with only its finding
   and project conventions. No accumulated state across findings.
 
@@ -330,5 +344,5 @@ or ESCALATED results.
   approach, escalate. The review-fix loop is for correctness convergence, not redesign.
 - **Trust but verify** — the elbow-grease skill verifies its own findings in Phase 3.
   This skill trusts those verified findings and focuses on fixing them.
-- **Report everything** — even findings below the severity threshold appear in the
-  exit report. "Noted, not fixed" is a deliberate outcome, not a silent omission.
+- **Zero means zero** — do not declare convergence while any confirmed P1, P2, or
+  P3 finding remains. Low impact changes priority, not disposition.
