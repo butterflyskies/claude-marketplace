@@ -65,6 +65,12 @@
       "source": "./plugins/construct",
       "description": "Construct continuity lifecycle starter skills — init (boot), pulse (upkeep), land (pre-clear)",
       "license": "MIT OR Apache-2.0"
+    },
+    {
+      "name": "buzz",
+      "source": "./plugins/buzz",
+      "description": "Buzz (Nostr) channel for Claude Code — receives messages via WebSocket and delivers as channel notifications",
+      "license": "MIT"
     }
   ]
 }
