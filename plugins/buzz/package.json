@@ -1,0 +1,15 @@
+{
+  "name": "buzz-bridge",
+  "version": "0.1.0",
+  "description": "MCP server that bridges Buzz (Nostr) messages to Claude Code as channel notifications",
+  "main": "bridge.mjs",
+  "type": "module",
+  "bin": {
+    "buzz-bridge": "./bridge.mjs"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "nostr-tools": "^2.24.3",
+    "ws": "^8.21.3"
+  }
+}
