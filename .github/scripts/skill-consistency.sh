@@ -48,8 +48,14 @@ is_bound() {
   return 1
 }
 
-# ---- forward direction: every skill declares a valid leaf; bound ⇒ loads ---
-for skill_file in plugins/*/skills/*/SKILL.md; do
+# ---- forward direction: every Claude skill declares a valid leaf; bound ⇒ loads
+# Codex plugins intentionally use Codex's minimal name/description frontmatter and
+# are validated separately. Do not force Claude marketplace category metadata
+# into their SKILL.md files.
+for plugin_manifest in plugins/*/.claude-plugin/plugin.json; do
+  plugin_dir=$(dirname "$(dirname "$plugin_manifest")")
+  for skill_file in "$plugin_dir"/skills/*/SKILL.md; do
+    [ -f "$skill_file" ] || continue
   category_count=$(awk '/^---$/{fence++; next} fence==1 && /^category:/{n++} END{print n+0}' "$skill_file")
   category=$(awk '/^---$/{fence++; next} fence==1 && /^category:/{sub(/^category:[[:space:]]*/, ""); print; exit}' "$skill_file")
 
@@ -80,6 +86,7 @@ for skill_file in plugins/*/skills/*/SKILL.md; do
   else
     echo "ok:   $skill_file ($category, not principle-bound)"
   fi
+  done
 done
 
 # ---- reverse direction: the ontology cannot rot -----------------------------

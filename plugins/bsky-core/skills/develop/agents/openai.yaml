@@ -1,0 +1,4 @@
+interface:
+  display_name: "Develop"
+  short_description: "Implement and verify scoped code changes"
+  default_prompt: "Use $develop to implement this change through planning, coding, verification, and review."

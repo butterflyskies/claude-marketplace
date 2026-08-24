@@ -1,0 +1,4 @@
+interface:
+  display_name: "Scope Sharpen"
+  short_description: "Split designs into testable implementation atoms"
+  default_prompt: "Use $scope-sharpen to decompose this approved specification into a validated dependency graph of implementation-ready atoms."

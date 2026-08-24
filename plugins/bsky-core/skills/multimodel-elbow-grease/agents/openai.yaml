@@ -1,0 +1,4 @@
+interface:
+  display_name: "Multi-Model Elbow Grease"
+  short_description: "Cross-profile six-lens review synthesis"
+  default_prompt: "Use $multimodel-elbow-grease to run independent six-lens reviews and synthesize verified consensus and disagreement."

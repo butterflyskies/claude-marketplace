@@ -1,0 +1,4 @@
+interface:
+  display_name: "Review Fix Loop"
+  short_description: "Converge verified six-lens findings"
+  default_prompt: "Use $review-fix-loop to review, fix verified owned findings, and re-review to an honest convergence or named exit."

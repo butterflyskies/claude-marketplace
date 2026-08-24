@@ -1,0 +1,4 @@
+interface:
+  display_name: "Skill Forge"
+  short_description: "Create, revise, and stage Codex skills"
+  default_prompt: "Use $skill-forge to create or revise a Codex skill and validate it."
