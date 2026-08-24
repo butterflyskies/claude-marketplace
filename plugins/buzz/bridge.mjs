@@ -88,8 +88,8 @@ rl.on('line', (line) => {
   if (msg.method === 'initialize') {
     log('MCP initialize received');
     sendResult(msg.id, {
-      protocolVersion: '2025-03-26',
-      capabilities: { experimental: { 'claude/channel': {} }, notifications: {} },
+      protocolVersion: '2024-11-05',
+      capabilities: { tools: {}, experimental: { 'claude/channel': {} } },
       serverInfo: { name: 'buzz-bridge', version: '0.1.0' },
     });
   } else if (msg.method === 'notifications/initialized') {
