@@ -1,0 +1,4 @@
+interface:
+  display_name: "Briefing"
+  short_description: "Summarize current operational attention"
+  default_prompt: "Use $briefing to show what currently needs my attention across configured operational sources."

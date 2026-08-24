@@ -4,6 +4,13 @@ These fixtures preserve exact prompt/result receipts for the five Syne-owned
 Codex adaptations at source revision
 `d29910dc302e8b7008df4b9fdc291a9cc9cad115`.
 
+`ari-three-skill-independent-receipts-20260824.json` separately covers the
+later `briefing`, `land`, and `scope-sharpen` ports. Each immutable prompt and
+structured result is hash-bound to the exact skill bytes. The evaluator was a
+fresh independent Codex subagent under the same coordinator and thread, not a
+cross-provider evaluator, and performed instruction tracing rather than live
+service execution.
+
 The receipts distinguish three kinds of evidence:
 
 - `real_workflow`: the candidate instructions were applied to the actual parity
@@ -18,6 +25,11 @@ coordinator that authored the adaptation. They are exact forward receipts, but
 they are not fresh-context or independent-model evidence. The receipt says so
 instead of laundering that limitation into a green label. `token-audit` has the
 stronger executable evidence described in its case.
+
+The three later cases use a separate fresh subagent. Their oracle checks
+structured decisions and receipt bindings rather than matching explanatory
+phrases. It does not claim live notification, forge, tracker, memory,
+repository, or collaboration effects.
 
 Run the oracle with:
 

@@ -1,7 +1,7 @@
 {
   "name": "bsky-core",
   "version": "0.1.0",
-  "description": "Codex-native butterflyskies design, development, review, pipeline, skill-authoring, and token-audit workflows.",
+  "description": "Codex-native butterflyskies briefing, design, development, review, scoping, landing, pipeline, skill-authoring, and token-audit workflows.",
   "author": {
     "name": "butterflyskies"
   },
@@ -9,7 +9,7 @@
   "interface": {
     "displayName": "Bsky Core",
     "shortDescription": "Codex-native software delivery workflows",
-    "longDescription": "Bsky Core provides evidence-grounded design, development, review, review/fix, pipeline advancement, skill authoring, and aggregate token-audit workflows adapted for Codex authority and provider boundaries.",
+    "longDescription": "Bsky Core provides evidence-grounded briefing, design, development, review, scope decomposition, session landing, pipeline advancement, skill authoring, and aggregate token-audit workflows adapted for Codex authority and provider boundaries.",
     "developerName": "butterflyskies",
     "category": "Developer Tools",
     "capabilities": ["skills"],

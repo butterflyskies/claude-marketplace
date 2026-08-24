@@ -1,0 +1,4 @@
+interface:
+  display_name: "Land"
+  short_description: "Reconcile and close a work session safely"
+  default_prompt: "Use $land to reconcile this session, perform only authorized wrap-up effects, and leave an exact handoff."

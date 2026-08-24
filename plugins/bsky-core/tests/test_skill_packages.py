@@ -10,13 +10,16 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SKILLS = ROOT / "skills"
 EXPECTED = {
+    "briefing",
     "design",
     "develop",
     "elbow-grease",
     "keep-the-wheel-turning",
+    "land",
     "load-design-principles",
     "multimodel-elbow-grease",
     "review-fix-loop",
+    "scope-sharpen",
     "skill-forge",
     "token-audit",
 }
@@ -156,6 +159,27 @@ class SkillPackageContractTests(unittest.TestCase):
         self.assertIn("atomically claim the exact item and step", text)
         self.assertIn("Never merge or deploy", text)
         self.assertIn("standing authorization matrix", text)
+
+    def test_briefing_is_observational_and_fail_honest(self) -> None:
+        text = skill_text("briefing")
+        self.assertIn("Ordinary briefing is read-only", text)
+        self.assertIn("Label unavailable sections `unchecked`, not `none`", text)
+        self.assertIn("never mark, dismiss", text)
+        self.assertIn("stored follow-up is context, not authority", text)
+
+    def test_land_has_effect_specific_authority_and_truthful_receipts(self) -> None:
+        text = skill_text("land")
+        self.assertIn("Start with a read-only inventory", text)
+        self.assertIn("Treat push as a separate external effect", text)
+        self.assertIn("Never merge", text)
+        self.assertIn("Never describe an unpushed commit as published", text)
+
+    def test_scope_sharpen_preserves_scope_and_does_not_implement(self) -> None:
+        text = skill_text("scope-sharpen")
+        self.assertIn("This is a scoping workflow, not implementation", text)
+        self.assertIn("Load `$bsky-core:load-design-principles`", text)
+        self.assertIn("Coverage: map every source requirement", text)
+        self.assertIn("Writing the artifact does not authorize", text)
 
     def test_skill_forge_preserves_install_and_publication_gates(self) -> None:
         text = skill_text("skill-forge")

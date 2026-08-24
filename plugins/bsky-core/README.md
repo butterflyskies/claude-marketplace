@@ -1,17 +1,20 @@
 # Bsky Core for Codex
 
-Codex-native adaptations of selected `bsky` workflows from
+Codex-native adaptations of `bsky` workflows from
 `butterflyskies/claude-marketplace@d29910dc302e8b7008df4b9fdc291a9cc9cad115`.
 
 ## Included skills
 
 - `design`
+- `briefing`
 - `develop`
 - `elbow-grease`
 - `keep-the-wheel-turning`
+- `land`
 - `load-design-principles`
 - `multimodel-elbow-grease`
 - `review-fix-loop`
+- `scope-sharpen`
 - `skill-forge`
 - `token-audit`
 
