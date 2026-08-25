@@ -11,4 +11,11 @@ jobs:
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - name: "(relationAll loadsDesignPrinciples PrincipleBoundSkill)"
-        run: bash .github/scripts/skill-consistency.sh | tee -a "$GITHUB_STEP_SUMMARY"
+        run: |
+          set -o pipefail
+          bash .github/scripts/skill-consistency.sh | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: "Review convergence contract"
+        if: always()
+        run: |
+          set -o pipefail
+          bash .github/scripts/review-convergence-contract.sh | tee -a "$GITHUB_STEP_SUMMARY"
