@@ -638,13 +638,7 @@ After all six sub-agents return:
    carried forward into sub-agent prompts in subsequent rounds (see Phase 2,
    "Providing context to sub-agents") so agents do not re-flag the same non-issues.
    Include dismissed findings in the report's Summary section for transparency.
-5. **File issues for pre-existing findings** — if a finding is real but dismissed
-   because it's a pre-existing pattern (not introduced by this PR), file a GitHub
-   issue documenting the problem and affected code locations. These are real issues
-   discovered during review — capturing them ensures they don't get lost. Include
-   the issue URLs in the report's Dismissed section.
-
-6. **Classify scope disposition** — give every verified finding exactly one
+5. **Classify scope disposition** — give every verified finding exactly one
    disposition, independently of severity:
    - `in_scope_fix`
    - `bounded_in_scope_mitigation`
@@ -658,6 +652,12 @@ After all six sub-agents return:
    shared by existing features. Emit this block verbatim and stop before fixing:
 
    > **SCOPE EXPANSION: STOP.** The finding is valid, but fixing it here changes the architecture or expands the agreed scope. I am stopping. Proposed next state: record targeted issues, decide priority and blocking status, then either resume the original slice under unchanged semantics or supersede it with an explicitly approved scope.
+
+6. **Capture pre-existing findings only when authorized** — after classification
+   and after returning on any scope stop, a real pre-existing finding may be
+   proposed as a separate issue. Create that issue only with explicit issue-write
+   authority for the exact repository; repository code access or review authority
+   is not issue-creation authority. Otherwise report the proposed issue in-session.
 
 ## Phase 3.5: Fix & re-review (autonomous loop)
 

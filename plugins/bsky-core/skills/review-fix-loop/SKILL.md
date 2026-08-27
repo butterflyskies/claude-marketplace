@@ -17,7 +17,6 @@ externally approved.
 
 - target scope accepted by `multimodel-elbow-grease`;
 - `max_rounds`, default 5;
-- `autonomous_rounds`, default 3 and never greater than `max_rounds`;
 - `min_severity`, default P3;
 - optional fix model/reasoning profile from the current Codex catalog;
 - optional project standards reference;
@@ -134,7 +133,7 @@ After each fix round:
   overlap, provider failure that leaves required coverage incomplete, or user
   redirection.
 
-Three rounds are the autonomous budget; five rounds remain the default quality ceiling. After the third completed review/fix round without convergence, stop before round four for a mandatory owner scope/convergence checkpoint even when `max_rounds` is higher or persistence was requested. Report why convergence is failing: scope expansion, an unsound design, systemic debt, inadequate production-path tests, fragmented handoffs, or difficult but still bounded work. Rounds four and five require explicit owner approval that the work remains bounded and that each next fix maps to the governing packet. A lower configured maximum still stops earlier.
+Three rounds are the invariant autonomous budget; five rounds remain the default quality ceiling. The autonomous checkpoint is not configurable. After the third completed review/fix round without convergence, stop before round four for a mandatory owner scope/convergence checkpoint even when `max_rounds` is higher or persistence was requested. Report why convergence is failing: scope expansion, an unsound design, systemic debt, inadequate production-path tests, fragmented handoffs, or difficult but still bounded work. Rounds four and five require explicit owner approval that the work remains bounded and that each next fix maps to the governing packet. A lower configured maximum still stops earlier.
 
 If two successive successors broaden the component or diff footprint instead of shrinking it, treat that as a scope-convergence alarm and hold the same owner checkpoint immediately; do not wait for round three.
 

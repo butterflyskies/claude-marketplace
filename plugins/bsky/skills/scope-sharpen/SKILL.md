@@ -136,6 +136,9 @@ Coverage: {covered}/{total} requirements
 
 - **Complexity:** trivial | moderate | complex
 - **Suggested model:** haiku | sonnet | opus
+- **Source requirements:** {requirement ids}
+- **Relevant non-goals:** none | {non-goal ids}
+- **Change-control disposition:** unchanged scope | owner-approved revision {receipt}
 - **Inputs:** {what it receives}
 - **Outputs:** {what it produces}
 - **Invariants:** {what must remain true}

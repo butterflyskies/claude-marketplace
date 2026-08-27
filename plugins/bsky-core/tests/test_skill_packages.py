@@ -52,7 +52,7 @@ class SkillPackageContractTests(unittest.TestCase):
             SKILLS / "multimodel-elbow-grease" / "SKILL.md":
                 "cf906797dfed6a1b06df184f2e3d9adb139b5296473a83c631494638674c0ab8",
             SKILLS / "review-fix-loop" / "SKILL.md":
-                "79e0545a665bbe5288f88dd38a1894e513df12cddf60de6b810b67ab30fc1200",
+                "155b73f1e33e7107fc988327efdf90bdc6c39be2e97318ebb31306ae0fb8f4f2",
         }
         for path, digest in expected.items():
             with self.subTest(file=str(path)):
@@ -207,7 +207,8 @@ class SkillPackageContractTests(unittest.TestCase):
         self.assertIn("CONVERGED", loop)
         self.assertIn("never infer publication or commit authority", loop)
         self.assertIn("`max_rounds`, default 5", loop)
-        self.assertIn("`autonomous_rounds`, default 3", loop)
+        self.assertNotIn("autonomous_rounds", loop)
+        self.assertIn("Three rounds are the invariant autonomous budget", loop)
         self.assertIn("scope_revision_required", loop)
         self.assertIn("SCOPE EXPANSION: STOP", loop)
         self.assertIn("A different reviewer must independently accept", loop)
@@ -237,6 +238,29 @@ class SkillPackageContractTests(unittest.TestCase):
             self.assertIn("three rounds", loop.lower())
             self.assertRegex(loop.lower(), r"round (four|4)")
             self.assertIn("five", loop.lower())
+
+    def test_claude_scope_decisions_precede_effects_and_survive_handoff(self) -> None:
+        elbow = (CLAUDE_SKILLS / "elbow-grease" / "SKILL.md").read_text(encoding="utf-8")
+        classify = elbow.index("**Classify scope disposition**")
+        capture = elbow.index("**Capture pre-existing findings only when authorized**")
+        fix_loop = elbow.index("## Phase 3.5: Fix & re-review")
+        self.assertLess(classify, capture)
+        self.assertLess(capture, fix_loop)
+        capture_contract = elbow[capture:fix_loop]
+        self.assertIn("after returning on any scope stop", capture_contract)
+        self.assertRegex(capture_contract, r"explicit issue-write\s+authority")
+        self.assertIn("repository code access or review authority", capture_contract)
+
+        scope = (CLAUDE_SKILLS / "scope-sharpen" / "SKILL.md").read_text(encoding="utf-8")
+        atom_template = scope[scope.index("### atom-1:"):scope.index("### atom-2:")]
+        self.assertIn("**Source requirements:**", atom_template)
+        self.assertIn("**Relevant non-goals:**", atom_template)
+        self.assertIn("**Change-control disposition:**", atom_template)
+
+        codex_loop = skill_text("review-fix-loop")
+        inputs = codex_loop[codex_loop.index("## Inputs"):codex_loop.index("## Resolve the target")]
+        self.assertNotIn("autonomous_rounds", inputs)
+        self.assertIn("The autonomous checkpoint is not configurable", codex_loop)
 
 
 if __name__ == "__main__":
