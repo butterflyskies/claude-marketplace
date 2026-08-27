@@ -52,7 +52,7 @@ class SkillPackageContractTests(unittest.TestCase):
             SKILLS / "multimodel-elbow-grease" / "SKILL.md":
                 "cf906797dfed6a1b06df184f2e3d9adb139b5296473a83c631494638674c0ab8",
             SKILLS / "review-fix-loop" / "SKILL.md":
-                "155b73f1e33e7107fc988327efdf90bdc6c39be2e97318ebb31306ae0fb8f4f2",
+                "29e0027736822135c9fb836028d532fa683d93971aee447e5a8bd5b0ee7ec476",
         }
         for path, digest in expected.items():
             with self.subTest(file=str(path)):
@@ -231,7 +231,7 @@ class SkillPackageContractTests(unittest.TestCase):
                     text = (skills / name / "SKILL.md").read_text(encoding="utf-8")
                     for phrase in required:
                         self.assertIn(phrase, text)
-                    self.assertIn("Review remote branch <name> at exact commit <full SHA> over exact base <full SHA>.", text)
+                    self.assertIn("Review repository <canonical remote>, remote branch <name>, exact commit <full SHA>, over exact base <full SHA>.", text)
                     self.assertIn("successor SHA invalidates", text)
 
             loop = (skills / "review-fix-loop" / "SKILL.md").read_text(encoding="utf-8")
@@ -261,6 +261,24 @@ class SkillPackageContractTests(unittest.TestCase):
         inputs = codex_loop[codex_loop.index("## Inputs"):codex_loop.index("## Resolve the target")]
         self.assertNotIn("autonomous_rounds", inputs)
         self.assertIn("The autonomous checkpoint is not configurable", codex_loop)
+
+    def test_prerequisite_and_review_custody_transitions_are_executable(self) -> None:
+        for provider, skills in (("codex", SKILLS), ("claude", CLAUDE_SKILLS)):
+            loop = (skills / "review-fix-loop" / "SKILL.md").read_text(encoding="utf-8")
+            with self.subTest(provider=provider, transition="prerequisite"):
+                self.assertIn("PREREQUISITE_BLOCKED", loop)
+                self.assertRegex(loop, r"separate_prerequisite_or_followup` finding is (never|not) actionable")
+                self.assertIn("owner-approved packet revision reclassifies", loop)
+
+        claude_elbow = (CLAUDE_SKILLS / "elbow-grease" / "SKILL.md").read_text(encoding="utf-8")
+        loop_block = claude_elbow[claude_elbow.index("while findings exist:"):claude_elbow.index("<!-- Maintenance note:")]
+        self.assertLess(loop_block.index("Push the fix commit"), loop_block.index("Fetch/read back the remote ref"))
+        self.assertLess(loop_block.index("Fetch/read back the remote ref"), loop_block.index("Re-run Phase 2"))
+
+        claude_loop = (CLAUDE_SKILLS / "review-fix-loop" / "SKILL.md").read_text(encoding="utf-8")
+        for state in ("SCOPE_STOP", "OWNER_CHECKPOINT_REQUIRED"):
+            self.assertIn(state, claude_loop)
+        self.assertIn("must not collapse them", claude_loop)
 
 
 if __name__ == "__main__":

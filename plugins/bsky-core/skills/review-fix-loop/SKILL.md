@@ -34,7 +34,7 @@ Claude model names, or `bsky:` namespaces.
    not already safe to modify.
    For cross-seat or independent acceptance, require a pushed remote ref and
    bind each round to the fetched full head SHA and full base SHA. Handoff text:
-   `Review remote branch <name> at exact commit <full SHA> over exact base <full SHA>.`
+   `Review repository <canonical remote>, remote branch <name>, exact commit <full SHA>, over exact base <full SHA>.`
    A local path, pasted/reconstructed diff, or branch name without its verified
    SHA is not a review boundary. Every successor SHA invalidates prior receipts.
 4. Derive sanctioned identities and environment requirements from current
@@ -90,7 +90,7 @@ Also partition verified findings by review outcome into:
 - dismissed: disproven with evidence;
 - escalated: requires a product/design/authority decision.
 
-Carry both the disposition and review-outcome sets into later rounds. A `separate_prerequisite_or_followup` finding is not actionable unless the scope owner explicitly makes it a prerequisite. Any `scope_revision_required` finding is an immediate loop exit, regardless of severity or remaining budget:
+Carry both the disposition and review-outcome sets into later rounds. A `separate_prerequisite_or_followup` finding is never actionable in this loop. If the scope owner makes it a prerequisite, return **PREREQUISITE_BLOCKED** and prohibit continuation until the separate work completes, or until an owner-approved packet revision reclassifies the finding into an eligible disposition. Any `scope_revision_required` finding is an immediate loop exit, regardless of severity or remaining budget:
 
 > **SCOPE EXPANSION: STOP.** The finding is valid, but fixing it here changes the architecture or expands the agreed scope. I am stopping. Proposed next state: record targeted issues, decide priority and blocking status, then either resume the original slice under unchanged semantics or supersede it with an explicitly approved scope.
 
@@ -139,8 +139,10 @@ If two successive successors broaden the component or diff footprint instead of 
 
 Return **CONVERGED** only when the full review contract reports no verified
 actionable findings at or above threshold and all required lenses/surfaces were
-covered in the final round. Otherwise return **STALLED**, **ESCALATED**, or
-**INCOMPLETE**, with the exact remaining work.
+covered in the final round. Otherwise return **PREREQUISITE_BLOCKED**,
+**SCOPE_STOP**, **OWNER_CHECKPOINT_REQUIRED**, **STALLED**, **ESCALATED**, or
+**INCOMPLETE**, with the exact owner, trigger, required decision, continuation
+prohibition, and remaining work that apply.
 
 ## Report
 

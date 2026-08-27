@@ -65,7 +65,7 @@ Determine what to review and establish the working state.
    ```
    For cross-seat or independent acceptance, the author must push a review ref.
    Record remote, branch, fetched full head SHA, and full base SHA, then hand off:
-   `Review remote branch <name> at exact commit <full SHA> over exact base <full SHA>.`
+   `Review repository <canonical remote>, remote branch <name>, exact commit <full SHA>, over exact base <full SHA>.`
    Reject a local-only path, pasted/reconstructed diff, mutable branch name alone,
    or any fetched drift. Every successor SHA invalidates the prior receipt.
 3. **Check out the branch** — if reviewing a PR and not already on its branch:
@@ -166,10 +166,12 @@ Severity ordering: P1 > P2 > P3. With `--min-severity P2`, P1 and P2 are
 actionable; P3 is noted. With `--min-severity P3` (default), everything is
 actionable.
 
-A `separate_prerequisite_or_followup` finding becomes actionable only when the
-scope owner explicitly makes it a prerequisite. Any
-`scope_revision_required` finding exits immediately, regardless of severity or
-round budget, with:
+A `separate_prerequisite_or_followup` finding is never actionable in this loop.
+If the scope owner makes it a prerequisite, exit **PREREQUISITE_BLOCKED** and
+prohibit continuation until the separate work completes, or until an
+owner-approved packet revision reclassifies it into an eligible disposition.
+Any `scope_revision_required` finding exits immediately, regardless of severity
+or round budget, with:
 
 > **SCOPE EXPANSION: STOP.** The finding is valid, but fixing it here changes the architecture or expands the agreed scope. I am stopping. Proposed next state: record targeted issues, decide priority and blocking status, then either resume the original slice under unchanged semantics or supersede it with an explicitly approved scope.
 
@@ -266,8 +268,9 @@ After all actionable findings from this round have been processed:
    git push
    ```
 
-   Resolve and report the new full remote SHA. That exact successor—not the
-   local worktree—is the next independent review target.
+   Fetch/read back the remote ref and verify the new full remote head and base
+   SHAs. Explicitly rebind the next independent review to the exact repository,
+   branch, head, and base; that successor—not the local worktree—is the target.
 
 3. **Check exit conditions**:
 
@@ -301,7 +304,11 @@ Produce a structured convergence report. This is the primary output of the skill
 ```
 ## Review-Fix Loop: <target description>
 
-### Result: <CONVERGED | STALLED | ESCALATED>
+### Result: <CONVERGED | PREREQUISITE_BLOCKED | SCOPE_STOP | OWNER_CHECKPOINT_REQUIRED | STALLED | ESCALATED>
+
+For `PREREQUISITE_BLOCKED`, `SCOPE_STOP`, and
+`OWNER_CHECKPOINT_REQUIRED`, include the scope owner, exact trigger, required
+decision or completion evidence, and an explicit prohibition on continuation.
 
 ### Rounds
 
@@ -348,8 +355,11 @@ This skill is designed to be called by other skills:
 - **Standalone use** on any PR: `/review-fix-loop --pr 42`
 
 When invoked by another skill, the exit report is returned to the caller for
-incorporation into its own output. The caller decides what to do with STALLED
-or ESCALATED results.
+incorporation into its own output. The caller must preserve
+`PREREQUISITE_BLOCKED`, `SCOPE_STOP`, and `OWNER_CHECKPOINT_REQUIRED` as hard
+handoffs to the named owner and must not collapse them into STALLED, ESCALATED,
+or CONVERGED. The caller decides what to do with ordinary STALLED or ESCALATED
+results.
 
 ## Constraints
 

@@ -80,7 +80,7 @@ automatically when re-invoking `bsky:elbow-grease` after fixes.
 
 Before reviewing code, build understanding. This phase is **silent** — no output to user.
 
-1. **Identify the diff** — resolve `$ARGUMENTS` to a concrete set of changed files and hunks. For cross-seat or independent acceptance, require a pushed remote ref and bind the review to its fetched full head SHA and full base SHA. Use exactly: `Review remote branch <name> at exact commit <full SHA> over exact base <full SHA>.` A local path, pasted/reconstructed diff, or mutable branch name alone is not review authority. Verify the fetched object; every successor SHA invalidates the prior receipt.
+1. **Identify the diff** — resolve `$ARGUMENTS` to a concrete set of changed files and hunks. For cross-seat or independent acceptance, require a pushed remote ref and bind the review to its fetched full head SHA and full base SHA. Use exactly: `Review repository <canonical remote>, remote branch <name>, exact commit <full SHA>, over exact base <full SHA>.` A local path, pasted/reconstructed diff, or mutable branch name alone is not review authority. Verify the fetched object; every successor SHA invalidates the prior receipt.
 2. **Read PR context** — for PR scopes, retrieve the PR body, conversation comments,
    reviews, and inline review threads (including resolution state), plus linked issues or
    discussions relevant to the change. Read them before producing findings. Treat comments
@@ -673,12 +673,14 @@ while findings exist:
     1. Fix only eligible in-scope findings from this round; stop on scope revision
     2. Commit: "fix: address review findings (round N)"
     3. Push the fix commit
-    4. Re-run Phase 2 with --since <previous-commit>
+    4. Fetch/read back the remote ref, verify its full head and base SHAs, and
+       explicitly rebind the next independent review target to those exact objects
+    5. Re-run Phase 2 with --since <previous-commit> against the bound remote object
        (incremental review of only the fix commits)
-    5. Re-run Phase 3 on the new results
-    6. If zero findings → PASS → exit loop
-    7. If findings remain → apply the scope and round checkpoints, then continue only when authorized
-    8. If a remedy requires design/scope change → emit SCOPE EXPANSION: STOP and exit
+    6. Re-run Phase 3 on the new results
+    7. If zero findings → PASS → exit loop
+    8. If findings remain → apply the scope and round checkpoints, then continue only when authorized
+    9. If a remedy requires design/scope change → emit SCOPE EXPANSION: STOP and exit
 ```
 
 <!-- Maintenance note: the while-loop pseudocode above is the mechanism that
