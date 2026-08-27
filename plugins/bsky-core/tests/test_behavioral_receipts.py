@@ -198,12 +198,54 @@ class BehavioralReceiptTests(unittest.TestCase):
         self.assertIn("No separate fresh exact-byte forward-test agent", receipt["evaluator"]["limitation"])
         self.assertEqual("independent_exact_byte_review_and_repository_contract_tests", receipt["evidence_class"])
         self.assertEqual([], receipt["blocking_findings"])
+        self.assertEqual(
+            {
+                "claude": {
+                    "scope-sharpen": "c539f7b822b487c309266254035d2573ac7ab1100bca39ba35635e12deecfe2c",
+                    "elbow-grease": "fe26986d815b18a79602db8ed787ba2569ef3d7ecfde7962f7e2dcd9d69af388",
+                    "review-fix-loop": "cf99880fde2506fc64333faf35933da5436051e22e8cd34075403fd484ef0750",
+                },
+                "codex": {
+                    "scope-sharpen": "7457122632b7f52de220476dc75892327908d03660d93e78fe3206393adde942",
+                    "elbow-grease": "dac38d7d930df3c83c1b7beab64fc3714cfe2d68c83a31763898a934da47f7ef",
+                    "review-fix-loop": "29e0027736822135c9fb836028d532fa683d93971aee447e5a8bd5b0ee7ec476",
+                },
+            },
+            receipt["provider_skill_sha256"],
+        )
+
+        integration = receipt["current_main_integration"]
+        self.assertEqual("https://github.com/butterflysky-syne/claude-marketplace", integration["reviewed_repository"])
+        self.assertEqual("syne/scope-expansion-stop-main", integration["reviewed_branch"])
+        self.assertEqual("c5043fe95502b80e7301167f87f5ecb2c4853617", integration["reviewed_head"])
+        self.assertEqual("2848590815230647fd90f3cb60cd66ef70a0e08d", integration["reviewed_base"])
+        self.assertEqual("abca38d5e29bcdd64d7929f833dded6b839a565129c9b269b1a98f843e443268", integration["binary_diff_sha256"])
+        self.assertEqual(
+            "discord:1507753511155405011/1542548154145312879",
+            integration["review_receipt"],
+        )
+        self.assertEqual("Codex", integration["evaluator"]["provider"])
+        self.assertTrue(integration["evaluator"]["independent_from_authoring"])
+        self.assertTrue(integration["evaluator"]["remote_ref_verified_at_start_and_finish"])
+        self.assertTrue(integration["evaluator"]["review_state_clean"])
+        self.assertEqual(
+            {
+                "files": 10,
+                "insertions": 403,
+                "deletions": 49,
+                "stale_branch_deletions": False,
+                "accepted_skill_files_byte_identical": 5,
+                "claude_elbow_grease_change": "Two additive lines documenting the bundled plugins/bsky/design-principles/v1/ source already present on current main.",
+            },
+            integration["delta"],
+        )
+        self.assertEqual("PASS", integration["verdict"])
         roots = {
             "claude": ROOT.parent / "bsky" / "skills",
             "codex": ROOT / "skills",
         }
         for provider, skills in roots.items():
-            for name, expected in receipt["provider_skill_sha256"][provider].items():
+            for name, expected in integration["provider_skill_sha256"][provider].items():
                 with self.subTest(provider=provider, skill=name):
                     self.assertEqual(expected, digest(skills / name / "SKILL.md"))
 

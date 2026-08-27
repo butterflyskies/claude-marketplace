@@ -36,6 +36,43 @@
       "review-fix-loop": "29e0027736822135c9fb836028d532fa683d93971aee447e5a8bd5b0ee7ec476"
     }
   },
+  "current_main_integration": {
+    "reviewed_repository": "https://github.com/butterflysky-syne/claude-marketplace",
+    "reviewed_branch": "syne/scope-expansion-stop-main",
+    "reviewed_head": "c5043fe95502b80e7301167f87f5ecb2c4853617",
+    "reviewed_base": "2848590815230647fd90f3cb60cd66ef70a0e08d",
+    "binary_diff_sha256": "abca38d5e29bcdd64d7929f833dded6b839a565129c9b269b1a98f843e443268",
+    "review_receipt": "discord:1507753511155405011/1542548154145312879",
+    "evaluator": {
+      "name": "Ari",
+      "provider": "Codex",
+      "independent_from_authoring": true,
+      "remote_ref_verified_at_start_and_finish": true,
+      "review_state_clean": true,
+      "scope": "bounded current-main integration review"
+    },
+    "delta": {
+      "files": 10,
+      "insertions": 403,
+      "deletions": 49,
+      "stale_branch_deletions": false,
+      "accepted_skill_files_byte_identical": 5,
+      "claude_elbow_grease_change": "Two additive lines documenting the bundled plugins/bsky/design-principles/v1/ source already present on current main."
+    },
+    "provider_skill_sha256": {
+      "claude": {
+        "scope-sharpen": "c539f7b822b487c309266254035d2573ac7ab1100bca39ba35635e12deecfe2c",
+        "elbow-grease": "8fa1a8ed9b4bfe8c29d24efc4477d679713e99e39dc08acbdc57f2b50da30c57",
+        "review-fix-loop": "cf99880fde2506fc64333faf35933da5436051e22e8cd34075403fd484ef0750"
+      },
+      "codex": {
+        "scope-sharpen": "7457122632b7f52de220476dc75892327908d03660d93e78fe3206393adde942",
+        "elbow-grease": "dac38d7d930df3c83c1b7beab64fc3714cfe2d68c83a31763898a934da47f7ef",
+        "review-fix-loop": "29e0027736822135c9fb836028d532fa683d93971aee447e5a8bd5b0ee7ec476"
+      }
+    },
+    "verdict": "PASS"
+  },
   "evidence_class": "independent_exact_byte_review_and_repository_contract_tests",
   "reviewed_contract_outcomes": {
     "missing_packet_reports_not_implementation_ready": true,
