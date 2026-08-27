@@ -9,6 +9,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 RECEIPT_PATH = ROOT / "tests" / "behavioral" / "syne-five-skill-receipts-20260806.json"
 PORT_RECEIPT_PATH = ROOT / "tests" / "behavioral" / "ari-three-skill-independent-receipts-20260824.json"
+SCOPE_GOVERNANCE_RECEIPT_PATH = ROOT / "tests" / "behavioral" / "ari-scope-governance-independent-receipt-20260827.json"
 REVIEW_PATH = ROOT / "tests" / "behavioral" / "six-lens-review-20260806.json"
 SOURCE_REVISION = "d29910dc302e8b7008df4b9fdc291a9cc9cad115"
 EXPECTED_SKILLS = {
@@ -36,7 +37,10 @@ class BehavioralReceiptTests(unittest.TestCase):
         cls.receipt = json.loads(RECEIPT_PATH.read_text(encoding="utf-8"))
         cls.cases = {case["skill"]: case for case in cls.receipt["cases"]}
         cls.port_receipt = json.loads(PORT_RECEIPT_PATH.read_text(encoding="utf-8"))
-        cls.port_cases = {case["skill"]: case for case in cls.port_receipt["cases"]}
+        cls.historical_port_cases = {case["skill"]: case for case in cls.port_receipt["cases"]}
+        cls.scope_governance_receipt = json.loads(SCOPE_GOVERNANCE_RECEIPT_PATH.read_text(encoding="utf-8"))
+        cls.port_cases = dict(cls.historical_port_cases)
+        cls.port_cases["scope-sharpen"] = cls.scope_governance_receipt["case"]
 
     def test_receipt_scope_and_executor_limit_are_explicit(self) -> None:
         self.assertEqual(SOURCE_REVISION, self.receipt["source_revision"])
@@ -162,8 +166,38 @@ class BehavioralReceiptTests(unittest.TestCase):
                 self.assertEqual(digest(ROOT / "skills" / name / "SKILL.md"), case["skill_sha256"])
                 self.assertEqual(hashlib.sha256(case["prompt"].encode()).hexdigest(), case["prompt_sha256"])
                 self.assertEqual(json_digest(case["result"]), case["result_sha256"])
-                self.assertEqual("independent_static_instruction_trace", case["evidence_class"])
+                expected_class = (
+                    "independent_cross_provider_instruction_trace"
+                    if name == "scope-sharpen"
+                    else "independent_static_instruction_trace"
+                )
+                self.assertEqual(expected_class, case["evidence_class"])
                 self.assertEqual("PASS", case["result"]["verdict"])
+
+    def test_scope_governance_receipt_binds_both_provider_surfaces(self) -> None:
+        receipt = self.scope_governance_receipt
+        self.assertEqual("6bd7f0241c2072c1fd6eadbfe5fb10ed78bf8413", receipt["reviewed_head"])
+        self.assertEqual("fcf116aa2d234e055c699ad8199c7c2f1bc9d77d", receipt["reviewed_base"])
+        self.assertTrue(receipt["evaluator"]["independent_from_authoring"])
+        self.assertTrue(receipt["evaluator"]["remote_ref_verified_at_start_and_finish"])
+        self.assertEqual([], receipt["blocking_findings"])
+        roots = {
+            "claude": ROOT.parent / "bsky" / "skills",
+            "codex": ROOT / "skills",
+        }
+        for provider, skills in roots.items():
+            for name, expected in receipt["provider_skill_sha256"][provider].items():
+                with self.subTest(provider=provider, skill=name):
+                    self.assertEqual(expected, digest(skills / name / "SKILL.md"))
+
+        result = receipt["case"]["result"]
+        self.assertFalse(result["missing_packet"]["implementation_ready"])
+        self.assertEqual([], result["missing_packet"]["implementation_or_external_writes"])
+        self.assertTrue(result["approved_packet"]["per_atom_source_requirements_present"])
+        self.assertTrue(result["approved_packet"]["per_atom_relevant_non_goals_present"])
+        self.assertTrue(result["approved_packet"]["per_atom_change_control_disposition_present"])
+        self.assertFalse(result["out_of_scope_surface"]["operator_tool_or_protocol_silently_added"])
+        self.assertTrue(result["out_of_scope_surface"]["owner_approved_scope_revision_required"])
 
     def test_briefing_port_preserves_observation_and_authority(self) -> None:
         result = self.port_cases["briefing"]["result"]
@@ -198,20 +232,19 @@ class BehavioralReceiptTests(unittest.TestCase):
 
     def test_scope_sharpen_port_covers_source_without_deciding_or_writing(self) -> None:
         result = self.port_cases["scope-sharpen"]["result"]
-        self.assertEqual(set(result["requirements"]), set(result["covered_requirements"]))
-        self.assertEqual([], result["coverage_gaps"])
-        self.assertEqual([], result["scope_creep"])
-        self.assertFalse(result["implementation_code_emitted"])
-        self.assertTrue(result["dependency_targets_exist"])
-        self.assertFalse(result["dependency_cycle_detected"])
-        self.assertEqual("NEEDS DESIGN DECISION", result["persistence_choice"])
-        self.assertFalse(result["artifact_written"])
-        self.assertEqual([], result["implementation_or_external_writes"])
-        self.assertTrue(result["forward_test"]["requested"])
-        self.assertFalse(result["forward_test"]["live_services_exercised"])
-        self.assertTrue(result["forward_test"]["limitation_disclosed"])
-        self.assertEqual(17, self.port_receipt["overall"]["invariants_verified"])
-        self.assertEqual(0, self.port_receipt["overall"]["invariants_failed"])
+        self.assertEqual("NO GOVERNING SCOPE PACKET", result["missing_packet"]["reported"])
+        self.assertFalse(result["missing_packet"]["implementation_ready"])
+        self.assertEqual([], result["missing_packet"]["implementation_or_external_writes"])
+        self.assertTrue(result["approved_packet"]["owner_and_approval_recorded"])
+        self.assertTrue(result["approved_packet"]["requirements_and_non_goals_numbered"])
+        self.assertTrue(result["approved_packet"]["per_atom_source_requirements_present"])
+        self.assertTrue(result["approved_packet"]["per_atom_relevant_non_goals_present"])
+        self.assertTrue(result["approved_packet"]["per_atom_change_control_disposition_present"])
+        self.assertFalse(result["out_of_scope_surface"]["operator_tool_or_protocol_silently_added"])
+        self.assertTrue(result["out_of_scope_surface"]["owner_approved_scope_revision_required"])
+        self.assertEqual({"claude", "codex"}, set(result["provider_surfaces_traced"]))
+        self.assertFalse(result["live_services_exercised"])
+        self.assertTrue(result["limitations_disclosed"])
 
 
 if __name__ == "__main__":

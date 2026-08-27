@@ -11,6 +11,12 @@ fresh independent Codex subagent under the same coordinator and thread, not a
 cross-provider evaluator, and performed instruction tracing rather than live
 service execution.
 
+That file remains historical evidence for its exact August 24 bytes.
+`ari-scope-governance-independent-receipt-20260827.json` supersedes only the
+current `scope-sharpen` binding after the shared scope-governance change. It
+records Ari's independent remote-SHA review and fresh instruction traces across
+the Claude and Codex provider surfaces; it does not rewrite the older receipt.
+
 The receipts distinguish three kinds of evidence:
 
 - `real_workflow`: the candidate instructions were applied to the actual parity
