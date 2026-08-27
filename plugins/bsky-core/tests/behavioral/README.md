@@ -14,8 +14,9 @@ service execution.
 That file remains historical evidence for its exact August 24 bytes.
 `ari-scope-governance-independent-receipt-20260827.json` supersedes only the
 current `scope-sharpen` binding after the shared scope-governance change. It
-records Ari's independent remote-SHA review and fresh instruction traces across
-the Claude and Codex provider surfaces; it does not rewrite the older receipt.
+records Ari's independent exact-remote-SHA source review plus the repository's
+decision-sensitive contract tests across Claude and Codex. It does not claim a
+fresh cross-provider instruction trace and does not rewrite the older receipt.
 
 The receipts distinguish three kinds of evidence:
 

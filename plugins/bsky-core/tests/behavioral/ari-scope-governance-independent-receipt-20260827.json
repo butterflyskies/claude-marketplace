@@ -11,12 +11,18 @@
   ],
   "evaluator": {
     "name": "Ari",
-    "provider": "Claude",
+    "provider": "Codex",
     "independent_from_authoring": true,
     "remote_ref_verified_at_start_and_finish": true,
     "detached_review_state_clean": true,
-    "live_services_exercised": false,
-    "limitation": "Six-lens single-coordinator degraded review with a separate fresh forward-test agent."
+    "topology": {
+      "mode": "coordinator_plus_two_fresh_lens_reviewers",
+      "fresh_reviewer_assignments": [
+        "Safety and Security",
+        "Design and Tests"
+      ]
+    },
+    "limitation": "No separate fresh exact-byte forward-test agent ran; evidence is exact source review plus decision-sensitive repository tests."
   },
   "provider_skill_sha256": {
     "claude": {
@@ -30,38 +36,18 @@
       "review-fix-loop": "29e0027736822135c9fb836028d532fa683d93971aee447e5a8bd5b0ee7ec476"
     }
   },
-  "case": {
-    "skill": "scope-sharpen",
-    "skill_sha256": "7457122632b7f52de220476dc75892327908d03660d93e78fe3206393adde942",
-    "evidence_class": "independent_cross_provider_instruction_trace",
-    "prompt": "Trace the exact Claude and Codex Scope Sharpen candidates through three cases: no governing scope packet; an owner-approved packet with numbered requirements and non-goals; and a requested operator tool or protocol outside the approved packet. Verify per-atom requirement and non-goal mapping, stop/re-scope behavior, and no implementation or external writes. Do not exercise live services.",
-    "prompt_sha256": "908ecacb665527761b4646cbc530d95b6a1068896545078cc79c681420707a36",
-    "result_sha256": "e660edfd2705e0f94942cdbc66eab24099f70a5a15f12f1a23afbca765fbca56",
-    "result": {
-      "verdict": "PASS",
-      "missing_packet": {
-        "reported": "NO GOVERNING SCOPE PACKET",
-        "implementation_ready": false,
-        "implementation_or_external_writes": []
-      },
-      "approved_packet": {
-        "owner_and_approval_recorded": true,
-        "requirements_and_non_goals_numbered": true,
-        "per_atom_source_requirements_present": true,
-        "per_atom_relevant_non_goals_present": true,
-        "per_atom_change_control_disposition_present": true
-      },
-      "out_of_scope_surface": {
-        "operator_tool_or_protocol_silently_added": false,
-        "owner_approved_scope_revision_required": true
-      },
-      "provider_surfaces_traced": [
-        "claude",
-        "codex"
-      ],
-      "live_services_exercised": false,
-      "limitations_disclosed": true
-    }
+  "evidence_class": "independent_exact_byte_review_and_repository_contract_tests",
+  "reviewed_contract_outcomes": {
+    "missing_packet_reports_not_implementation_ready": true,
+    "approved_packet_records_owner_requirements_and_non_goals": true,
+    "per_atom_authority_mapping_required": true,
+    "out_of_scope_surfaces_require_owner_scope_revision": true,
+    "scope_stop_precedes_external_issue_effect": true,
+    "remote_handoff_binds_repository_branch_head_and_base": true,
+    "provider_surfaces_reviewed": [
+      "claude",
+      "codex"
+    ]
   },
   "verdict": "ACCEPTED_FOR_APPROVED_SCOPE",
   "blocking_findings": [],
