@@ -17,6 +17,7 @@ externally approved.
 
 - target scope accepted by `multimodel-elbow-grease`;
 - `max_rounds`, default 5;
+- `autonomous_rounds`, default 3 and never greater than `max_rounds`;
 - `min_severity`, default P3;
 - optional fix model/reasoning profile from the current Codex catalog;
 - optional project standards reference;
@@ -32,6 +33,11 @@ Claude model names, or `bsky:` namespaces.
 3. Resolve target, base, and changed-file inventory without checking out another
    branch over user work. Use an isolated worktree when the requested target is
    not already safe to modify.
+   For cross-seat or independent acceptance, require a pushed remote ref and
+   bind each round to the fetched full head SHA and full base SHA. Handoff text:
+   `Review remote branch <name> at exact commit <full SHA> over exact base <full SHA>.`
+   A local path, pasted/reconstructed diff, or branch name without its verified
+   SHA is not a review boundary. Every successor SHA invalidates prior receipts.
 4. Derive sanctioned identities and environment requirements from current
    authoritative seat/repository configuration; do not load guessed credentials.
 5. Load explicit project standards when supplied. Auto-detected memory is
@@ -39,6 +45,7 @@ Claude model names, or `bsky:` namespaces.
    is a named coverage gap, not permission to invent one.
 6. Record the exact generic and multimodel skill digests, starting revision,
    owned paths, unrelated changes, threshold, rounds, and write authority.
+7. Require the governing scope packet produced by `$bsky-core:scope-sharpen`, including owner, approval state, requirements, non-goals, permitted surfaces, dependencies, stop rule, and starting footprint. If it is absent, run the initial review only when useful, report **NO GOVERNING SCOPE PACKET**, and stop before automatic fixes.
 
 ## Review round
 
@@ -69,7 +76,14 @@ return **INCOMPLETE** and never infer convergence. The loop may resume from the
 envelope's remaining cells, but may not silently discard successful partial
 receipts or disagreements.
 
-Partition verified findings into:
+After validating the multimodel envelope, classify every verified finding against the governing packet. Do this even when an intermediary omitted a generic-review disposition; do not infer scope from the finding's severity or proposed remedy. Use the four dispositions required by generic `elbow-grease`:
+
+- `in_scope_fix`;
+- `bounded_in_scope_mitigation`;
+- `separate_prerequisite_or_followup`;
+- `scope_revision_required`.
+
+Also partition verified findings by review outcome into:
 
 - actionable: at or above threshold and within task ownership;
 - noted: below threshold;
@@ -77,11 +91,13 @@ Partition verified findings into:
 - dismissed: disproven with evidence;
 - escalated: requires a product/design/authority decision.
 
-Carry all five sets into later rounds.
+Carry both the disposition and review-outcome sets into later rounds. A `separate_prerequisite_or_followup` finding is not actionable unless the scope owner explicitly makes it a prerequisite. Any `scope_revision_required` finding is an immediate loop exit, regardless of severity or remaining budget:
+
+> **SCOPE EXPANSION: STOP.** The finding is valid, but fixing it here changes the architecture or expands the agreed scope. I am stopping. Proposed next state: record targeted issues, decide priority and blocking status, then either resume the original slice under unchanged semantics or supersede it with an explicitly approved scope.
 
 ## Fix round
 
-Fix actionable findings serially in severity then file order.
+Among actionable findings, fix only `in_scope_fix` findings and owner-approved `bounded_in_scope_mitigation` findings, serially in severity then file order.
 
 For each finding:
 
@@ -100,6 +116,8 @@ For each finding:
 6. Escalate rather than force a fix that changes product intent or needs new
    authority.
 
+Prefer routing a bounded finding to the reviewer who discovered it while the causal model is fresh, when that reviewer has fix authority and is available. A different reviewer must independently accept the exact successor. Rotate fixer/reviewer roles when practical; nobody accepts their own bytes. Disclose when static roles were unavoidable.
+
 Do not push merely because a PR exists. Pushes, comments, issues, merges,
 deployments, and memory writes each require their own established authority.
 
@@ -108,11 +126,17 @@ deployments, and memory writes each require their own established authority.
 After each fix round:
 
 - verify the post-fix revision and worktree state;
+- map every fix to an approved requirement and re-check explicit non-goals;
+- compare changed components and diff footprint with the starting packet and prior successor;
 - re-run the full review contract;
 - increment the round count;
-- stop on unresolved P1, design/authority gate, exhausted rounds/budget, unsafe
+- stop immediately on `scope_revision_required`, unresolved P1, design/authority gate, exhausted rounds/budget, unsafe
   overlap, provider failure that leaves required coverage incomplete, or user
   redirection.
+
+Three rounds are the autonomous budget; five rounds remain the default quality ceiling. After the third completed review/fix round without convergence, stop before round four for a mandatory owner scope/convergence checkpoint even when `max_rounds` is higher or persistence was requested. Report why convergence is failing: scope expansion, an unsound design, systemic debt, inadequate production-path tests, fragmented handoffs, or difficult but still bounded work. Rounds four and five require explicit owner approval that the work remains bounded and that each next fix maps to the governing packet. A lower configured maximum still stops earlier.
+
+If two successive successors broaden the component or diff footprint instead of shrinking it, treat that as a scope-convergence alarm and hold the same owner checkpoint immediately; do not wait for round three.
 
 Return **CONVERGED** only when the full review contract reports no verified
 actionable findings at or above threshold and all required lenses/surfaces were
@@ -126,6 +150,7 @@ Include:
 - target, starting and final revisions, skill/principle digests;
 - per-round counts for verified, fixed, new, dismissed, noted, unowned, and
   escalated findings;
+- per-round scope-disposition counts, requirement coverage, component/diff footprint, and any owner checkpoint decision;
 - each fix and its test receipt;
 - remaining findings and unreviewed coverage;
 - exact commit/uncommitted state;
@@ -146,3 +171,4 @@ deliberate action.
 - Never merge or deploy; never infer publication or commit authority.
 - Report an incomplete review honestly rather than treating partial zeroes as
   convergence.
+- Persistence authorizes continued work only inside the governing packet; it never waives a scope stop or owner checkpoint.

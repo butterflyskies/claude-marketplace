@@ -45,6 +45,14 @@ whether it asks questions. If it does, the atom isn't sharp enough yet.
 3. **Report.** Post a one-line status: "scope-sharpen started. spec: {file}.
    {N} top-level pieces identified. max-depth: {depth}."
 
+4. **Establish governing scope.** Locate the owner-approved scope artifact. It
+   must name the scope owner and approval state; numbered requirements and
+   non-goals; permitted surfaces and trust boundaries; dependencies and rollout
+   constraints; starting file/component footprint; verification criteria; and
+   stop/re-scope conditions. If none exists, report **NO GOVERNING SCOPE PACKET**.
+   You may draft one for owner approval, but it is not implementation-ready and
+   must not be inferred from the current diff or later PR prose.
+
 ## Phase 2: Sharpening loop
 
 For each piece, at each depth level:
@@ -81,6 +89,12 @@ After all atoms are produced:
    the original spec. Flag any additions: "SCOPE CREEP — {atom} not in original
    spec."
 
+   Trace each atom to numbered requirements and non-goals in the governing
+   packet. Flag changes to authorization/configuration semantics, public or
+   operator tools, persistent artifacts, protocols, state machines, explicit
+   non-goals, or defects shared by existing features as requiring owner-approved
+   scope revision rather than silently adding an atom.
+
 3. **Dependency consistency.** For each atom's declared dependencies, verify
    the target atom exists. Flag broken links.
 
@@ -98,6 +112,13 @@ Produce `atoms.md` (or the `--output` file) as a structured DAG:
 # Atoms — {spec name}
 
 Source: {spec file}
+Scope owner: {owner}
+Approval: {approved | draft | missing}
+Requirements: {requirement ids}
+Non-goals: {non-goal ids}
+Permitted surfaces: {surfaces}
+Starting footprint: {files/components}
+Stop conditions: {conditions}
 Generated: {timestamp}
 Total atoms: {N}
 Coverage: {covered}/{total} requirements

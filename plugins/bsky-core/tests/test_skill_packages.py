@@ -9,6 +9,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SKILLS = ROOT / "skills"
+CLAUDE_SKILLS = ROOT.parent / "bsky" / "skills"
 EXPECTED = {
     "briefing",
     "design",
@@ -51,7 +52,7 @@ class SkillPackageContractTests(unittest.TestCase):
             SKILLS / "multimodel-elbow-grease" / "SKILL.md":
                 "cf906797dfed6a1b06df184f2e3d9adb139b5296473a83c631494638674c0ab8",
             SKILLS / "review-fix-loop" / "SKILL.md":
-                "b0bbdb5357f2fd133a056beadbfd332f328aa8cec5fe2916384af508b7954e4f",
+                "79e0545a665bbe5288f88dd38a1894e513df12cddf60de6b810b67ab30fc1200",
         }
         for path, digest in expected.items():
             with self.subTest(file=str(path)):
@@ -152,6 +153,9 @@ class SkillPackageContractTests(unittest.TestCase):
         self.assertEqual(expected, headings)
         self.assertIn("review-only", text)
         self.assertIn("unless the user separately authorizes fixes", text)
+        self.assertIn("NO GOVERNING SCOPE PACKET", text)
+        self.assertIn("scope_revision_required", text)
+        self.assertIn("SCOPE EXPANSION: STOP", text)
 
     def test_wheel_has_single_nudge_and_external_effect_boundaries(self) -> None:
         text = skill_text("keep-the-wheel-turning")
@@ -179,6 +183,9 @@ class SkillPackageContractTests(unittest.TestCase):
         self.assertIn("This is a scoping workflow, not implementation", text)
         self.assertIn("Load `$bsky-core:load-design-principles`", text)
         self.assertIn("Coverage: map every source requirement", text)
+        self.assertIn("scope owner who can approve a revision", text)
+        self.assertIn("stop/re-scope rule", text)
+        self.assertIn("NO GOVERNING SCOPE PACKET", text)
         self.assertIn("Writing the artifact does not authorize", text)
 
     def test_skill_forge_preserves_install_and_publication_gates(self) -> None:
@@ -199,6 +206,37 @@ class SkillPackageContractTests(unittest.TestCase):
         self.assertIn("INCOMPATIBLE_GENERIC", multimodel)
         self.assertIn("CONVERGED", loop)
         self.assertIn("never infer publication or commit authority", loop)
+        self.assertIn("`max_rounds`, default 5", loop)
+        self.assertIn("`autonomous_rounds`, default 3", loop)
+        self.assertIn("scope_revision_required", loop)
+        self.assertIn("SCOPE EXPANSION: STOP", loop)
+        self.assertIn("A different reviewer must independently accept", loop)
+
+    def test_scope_stop_and_remote_review_custody_cover_both_providers(self) -> None:
+        required = {
+            "NO GOVERNING SCOPE PACKET",
+            "scope_revision_required",
+            "SCOPE EXPANSION: STOP",
+        }
+        for provider, skills in (("codex", SKILLS), ("claude", CLAUDE_SKILLS)):
+            with self.subTest(provider=provider, skill="scope-sharpen"):
+                scope = (skills / "scope-sharpen" / "SKILL.md").read_text(encoding="utf-8")
+                self.assertIn("NO GOVERNING SCOPE PACKET", scope)
+                self.assertIn("scope owner", scope.lower())
+                self.assertIn("non-goals", scope)
+
+            for name in ("elbow-grease", "review-fix-loop"):
+                with self.subTest(provider=provider, skill=name):
+                    text = (skills / name / "SKILL.md").read_text(encoding="utf-8")
+                    for phrase in required:
+                        self.assertIn(phrase, text)
+                    self.assertIn("Review remote branch <name> at exact commit <full SHA> over exact base <full SHA>.", text)
+                    self.assertIn("successor SHA invalidates", text)
+
+            loop = (skills / "review-fix-loop" / "SKILL.md").read_text(encoding="utf-8")
+            self.assertIn("three rounds", loop.lower())
+            self.assertRegex(loop.lower(), r"round (four|4)")
+            self.assertIn("five", loop.lower())
 
 
 if __name__ == "__main__":

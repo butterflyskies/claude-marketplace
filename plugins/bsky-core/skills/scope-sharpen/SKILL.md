@@ -9,24 +9,40 @@ Turn a source specification into an implementation-ready dependency graph. An at
 
 This is a scoping workflow, not implementation. Load `$bsky-core:load-design-principles` when available and apply the relevant digest because atom boundaries are design decisions.
 
+## Governing scope packet
+
+Produce or normalize a governing scope packet before declaring implementation atoms ready. The packet must name:
+
+- the source specification and its approval state;
+- the scope owner who can approve a revision;
+- numbered requirements and explicit non-goals;
+- permitted components, interfaces, and trust boundaries;
+- dependencies and rollout constraints;
+- a starting footprint when code already exists;
+- verification obligations; and
+- a stop/re-scope rule.
+
+If no approved source or scope owner exists, report **NO GOVERNING SCOPE PACKET**. You may produce a draft packet for owner approval, but do not label its atoms implementation-ready or infer authority from the current diff, pull-request prose, or work already performed.
+
 ## Inputs and modes
 
 Establish:
 
 - the source specification, from a local artifact or an exact memory record;
+- the scope owner and approval state;
 - an optional maximum decomposition depth, defaulting to three;
 - whether the user wants independent forward-testing;
 - the requested output artifact, defaulting to `atoms.md` only when repository writes are in scope.
 
 A requested model or execution profile is a preference, not a capability claim. Use it only when the active provider exposes it. Never substitute a named model silently or hard-code a provider tier as part of the atom contract.
 
-If the source design is unapproved, contradictory, or missing a decision that changes decomposition, stop with the exact ambiguity. Sharpening must not settle product questions by accident.
+If the source design is unapproved, contradictory, missing an owner, or missing a decision that changes decomposition, report the exact ambiguity and stop before implementation-ready decomposition. When the user asked for a draft, you may still produce the unresolved scope packet for owner decision. Sharpening must not settle product questions by accident.
 
 ## Orient and trace requirements
 
 Read the complete source and its applicable repository instructions. Identify stable requirements, non-goals, invariants, data and trust boundaries, components, interfaces, migrations, configuration, observability, and verification obligations.
 
-Create a requirement inventory before splitting. Give every requirement a stable source reference so coverage and scope can be checked mechanically or by exact citation later. Report the source identity, requirement count, initial component count, and depth limit.
+Create a requirement inventory before splitting. Give every requirement and non-goal a stable source reference so coverage and scope can be checked mechanically or by exact citation later. Report the source identity, owner, approval state, requirement count, initial component and diff footprint when applicable, and depth limit.
 
 ## Decomposition loop
 
@@ -46,6 +62,7 @@ Before presenting the atoms:
 
 - Coverage: map every source requirement to one or more atoms and flag gaps.
 - Scope: map every atom back to source requirements and remove or flag additions.
+- Change control: mark any atom that changes authorization or configuration semantics, adds a public/operator surface, persistent artifact, protocol, state machine, or new subsystem, reverses a non-goal, or absorbs a systemic pre-existing defect. Such an atom requires explicit owner-approved scope revision before it is implementation-ready.
 - Dependencies: verify every referenced atom exists, detect cycles, and distinguish hard prerequisites from parallel-safe work.
 - Interfaces: check adjacent atoms agree on ownership, inputs, outputs, failure behavior, and migration ordering.
 - Verification: ensure each atom has an observable oracle and that aggregate tests cover cross-atom behavior.
@@ -58,6 +75,7 @@ Forward-testing is optional. When requested and collaboration agents are availab
 Produce a DAG containing:
 
 - source identity and generation time;
+- scope owner, approval state, stop/re-scope rule, permitted surfaces, and starting footprint;
 - requirement coverage count and any gaps;
 - a dependency graph;
 - one section per atom with a one-sentence outcome, source requirement IDs, complexity, suggested capability profile, inputs, outputs, invariants, test condition, dependencies, and parallel-safety;

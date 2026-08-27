@@ -25,7 +25,7 @@ and pass the returned digest to `bsky:multimodel-elbow-grease` invocations and f
 |----------|---------|---------|
 | `--pr <number>` | current branch's PR | Review a specific PR |
 | `--repo <owner/repo>` | current repo | Target repo (for cross-repo PRs) |
-| `--max-rounds <N>` | `5` | Maximum review-fix iterations before stopping |
+| `--max-rounds <N>` | `5` | Hard maximum review-fix iterations; rounds 4–5 require owner approval |
 | `--min-severity <level>` | `P3` | Fix findings at this level and above (`P1`, `P2`, or `P3`) |
 | `--fix-model <model>` | `sonnet` | Model for fix agents (`sonnet` or `opus`) |
 | `--standards <memory-ref>` | auto-detect | Load coding standards as context for review and fix agents. Auto-detects `coding-standards-<repo>` from collective-conscious if not specified. |
@@ -48,6 +48,9 @@ Defaults when no scope is specified:
 - If on a branch with an open PR: review that PR (`gh pr list --head <branch> --state open --json number --jq '.[0].number'`)
 - Otherwise: review all uncommitted changes (staged + unstaged)
 
+Three rounds are the autonomous budget. The five-round default is a quality
+ceiling, not authorization for five unattended rounds.
+
 ## Phase 1: Resolve target
 
 Determine what to review and establish the working state.
@@ -60,6 +63,11 @@ Determine what to review and establish the working state.
    # If no --pr, check current branch:
    gh pr list --head "$(git branch --show-current)" --state open --json number,url --jq '.[0]'
    ```
+   For cross-seat or independent acceptance, the author must push a review ref.
+   Record remote, branch, fetched full head SHA, and full base SHA, then hand off:
+   `Review remote branch <name> at exact commit <full SHA> over exact base <full SHA>.`
+   Reject a local-only path, pasted/reconstructed diff, mutable branch name alone,
+   or any fetched drift. Every successor SHA invalidates the prior receipt.
 3. **Check out the branch** — if reviewing a PR and not already on its branch:
    ```bash
    gh pr checkout <number> --repo <repo>
@@ -92,6 +100,11 @@ Determine what to review and establish the working state.
    Fix model: sonnet
    Standards: coding-standards-my-repo (or: <explicit ref> | none)
    ```
+7. **Load governing scope** — require the owner-approved packet produced by
+   `bsky:scope-sharpen`, including owner, approval state, requirements,
+   non-goals, permitted surfaces, dependencies, starting footprint, and stop
+   conditions. If absent, report **NO GOVERNING SCOPE PACKET** and stop before
+   automatic fixes.
 
 ## Phase 2: Review round
 
@@ -139,7 +152,13 @@ After `bsky:multimodel-elbow-grease` completes, collect its findings into a stru
 Each finding has: severity (P1/P2/P3), title, file:line, issue description,
 impact, and suggested fix.
 
-Partition findings into two buckets:
+Assign every verified finding one scope disposition:
+- `in_scope_fix`
+- `bounded_in_scope_mitigation`
+- `separate_prerequisite_or_followup`
+- `scope_revision_required`
+
+Then partition findings into two severity buckets:
 - **actionable**: severity >= `--min-severity` threshold
 - **noted**: severity < threshold (reported but not fixed)
 
@@ -147,9 +166,17 @@ Severity ordering: P1 > P2 > P3. With `--min-severity P2`, P1 and P2 are
 actionable; P3 is noted. With `--min-severity P3` (default), everything is
 actionable.
 
+A `separate_prerequisite_or_followup` finding becomes actionable only when the
+scope owner explicitly makes it a prerequisite. Any
+`scope_revision_required` finding exits immediately, regardless of severity or
+round budget, with:
+
+> **SCOPE EXPANSION: STOP.** The finding is valid, but fixing it here changes the architecture or expands the agreed scope. I am stopping. Proposed next state: record targeted issues, decide priority and blocking status, then either resume the original slice under unchanged semantics or supersede it with an explicitly approved scope.
+
 ## Phase 3: Fix
 
-If there are zero actionable findings, skip to Phase 5 (converged).
+If there are zero actionable in-scope findings, skip to Phase 5. Fix only
+`in_scope_fix` and owner-approved `bounded_in_scope_mitigation` findings.
 
 For each actionable finding, **serially** (not in parallel — order matters for
 files that have multiple findings):
@@ -181,6 +208,11 @@ files that have multiple findings):
    finding (e.g., requires design change, ambiguous intent, or the fix introduces
    worse problems), mark it as **escalated** and continue to the next finding.
    Escalated P1s stop the loop in Phase 4.
+
+Prefer letting the reviewer who found a bounded defect implement it while the
+causal model is fresh, when authorized. A different person must independently
+review and accept the exact successor SHA. Rotate roles when practical; nobody
+accepts their own bytes.
 
 ### Fix agent prompt template
 
@@ -234,15 +266,26 @@ After all actionable findings from this round have been processed:
    git push
    ```
 
+   Resolve and report the new full remote SHA. That exact successor—not the
+   local worktree—is the next independent review target.
+
 3. **Check exit conditions**:
 
    | Condition | Action |
    |-----------|--------|
    | Escalated P1 exists | **Exit: escalate.** Report the P1 and flag for human review. |
+   | `scope_revision_required` exists | **Exit: scope stop.** Return disposition to the scope owner. |
+   | Third round completed without convergence | **Exit: checkpoint.** Require owner scope/convergence discussion before round 4. |
    | Round count >= `--max-rounds` | **Exit: stalled.** Report remaining findings. |
    | Otherwise | **Continue to Phase 2** (next review round). |
 
 4. **Increment round counter** and loop back to Phase 2 for a full re-review.
+
+Before continuing, map every proposed fix to an approved requirement and
+re-check non-goals. Compare touched components and diff footprint with the
+packet and prior successor. Two successive broadened successors trigger the
+same owner checkpoint immediately. Rounds four and five proceed only after the
+owner explicitly confirms the work remains bounded.
 
 The re-review is deliberately full-scope (with `--since` for efficiency, but the
 elbow-grease skill's incremental mode still verifies prior findings are resolved
