@@ -9,6 +9,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SKILLS = ROOT / "skills"
+CLAUDE_SKILLS = ROOT.parent / "bsky" / "skills"
 EXPECTED = {
     "briefing",
     "design",
@@ -51,7 +52,7 @@ class SkillPackageContractTests(unittest.TestCase):
             SKILLS / "multimodel-elbow-grease" / "SKILL.md":
                 "cf906797dfed6a1b06df184f2e3d9adb139b5296473a83c631494638674c0ab8",
             SKILLS / "review-fix-loop" / "SKILL.md":
-                "b0bbdb5357f2fd133a056beadbfd332f328aa8cec5fe2916384af508b7954e4f",
+                "29e0027736822135c9fb836028d532fa683d93971aee447e5a8bd5b0ee7ec476",
         }
         for path, digest in expected.items():
             with self.subTest(file=str(path)):
@@ -152,6 +153,9 @@ class SkillPackageContractTests(unittest.TestCase):
         self.assertEqual(expected, headings)
         self.assertIn("review-only", text)
         self.assertIn("unless the user separately authorizes fixes", text)
+        self.assertIn("NO GOVERNING SCOPE PACKET", text)
+        self.assertIn("scope_revision_required", text)
+        self.assertIn("SCOPE EXPANSION: STOP", text)
 
     def test_wheel_has_single_nudge_and_external_effect_boundaries(self) -> None:
         text = skill_text("keep-the-wheel-turning")
@@ -179,6 +183,9 @@ class SkillPackageContractTests(unittest.TestCase):
         self.assertIn("This is a scoping workflow, not implementation", text)
         self.assertIn("Load `$bsky-core:load-design-principles`", text)
         self.assertIn("Coverage: map every source requirement", text)
+        self.assertIn("scope owner who can approve a revision", text)
+        self.assertIn("stop/re-scope rule", text)
+        self.assertIn("NO GOVERNING SCOPE PACKET", text)
         self.assertIn("Writing the artifact does not authorize", text)
 
     def test_skill_forge_preserves_install_and_publication_gates(self) -> None:
@@ -199,6 +206,79 @@ class SkillPackageContractTests(unittest.TestCase):
         self.assertIn("INCOMPATIBLE_GENERIC", multimodel)
         self.assertIn("CONVERGED", loop)
         self.assertIn("never infer publication or commit authority", loop)
+        self.assertIn("`max_rounds`, default 5", loop)
+        self.assertNotIn("autonomous_rounds", loop)
+        self.assertIn("Three rounds are the invariant autonomous budget", loop)
+        self.assertIn("scope_revision_required", loop)
+        self.assertIn("SCOPE EXPANSION: STOP", loop)
+        self.assertIn("A different reviewer must independently accept", loop)
+
+    def test_scope_stop_and_remote_review_custody_cover_both_providers(self) -> None:
+        required = {
+            "NO GOVERNING SCOPE PACKET",
+            "scope_revision_required",
+            "SCOPE EXPANSION: STOP",
+        }
+        for provider, skills in (("codex", SKILLS), ("claude", CLAUDE_SKILLS)):
+            with self.subTest(provider=provider, skill="scope-sharpen"):
+                scope = (skills / "scope-sharpen" / "SKILL.md").read_text(encoding="utf-8")
+                self.assertIn("NO GOVERNING SCOPE PACKET", scope)
+                self.assertIn("scope owner", scope.lower())
+                self.assertIn("non-goals", scope)
+
+            for name in ("elbow-grease", "review-fix-loop"):
+                with self.subTest(provider=provider, skill=name):
+                    text = (skills / name / "SKILL.md").read_text(encoding="utf-8")
+                    for phrase in required:
+                        self.assertIn(phrase, text)
+                    self.assertIn("Review repository <canonical remote>, remote branch <name>, exact commit <full SHA>, over exact base <full SHA>.", text)
+                    self.assertIn("successor SHA invalidates", text)
+
+            loop = (skills / "review-fix-loop" / "SKILL.md").read_text(encoding="utf-8")
+            self.assertIn("three rounds", loop.lower())
+            self.assertRegex(loop.lower(), r"round (four|4)")
+            self.assertIn("five", loop.lower())
+
+    def test_claude_scope_decisions_precede_effects_and_survive_handoff(self) -> None:
+        elbow = (CLAUDE_SKILLS / "elbow-grease" / "SKILL.md").read_text(encoding="utf-8")
+        classify = elbow.index("**Classify scope disposition**")
+        capture = elbow.index("**Capture pre-existing findings only when authorized**")
+        fix_loop = elbow.index("## Phase 3.5: Fix & re-review")
+        self.assertLess(classify, capture)
+        self.assertLess(capture, fix_loop)
+        capture_contract = elbow[capture:fix_loop]
+        self.assertIn("after returning on any scope stop", capture_contract)
+        self.assertRegex(capture_contract, r"explicit issue-write\s+authority")
+        self.assertIn("repository code access or review authority", capture_contract)
+
+        scope = (CLAUDE_SKILLS / "scope-sharpen" / "SKILL.md").read_text(encoding="utf-8")
+        atom_template = scope[scope.index("### atom-1:"):scope.index("### atom-2:")]
+        self.assertIn("**Source requirements:**", atom_template)
+        self.assertIn("**Relevant non-goals:**", atom_template)
+        self.assertIn("**Change-control disposition:**", atom_template)
+
+        codex_loop = skill_text("review-fix-loop")
+        inputs = codex_loop[codex_loop.index("## Inputs"):codex_loop.index("## Resolve the target")]
+        self.assertNotIn("autonomous_rounds", inputs)
+        self.assertIn("The autonomous checkpoint is not configurable", codex_loop)
+
+    def test_prerequisite_and_review_custody_transitions_are_executable(self) -> None:
+        for provider, skills in (("codex", SKILLS), ("claude", CLAUDE_SKILLS)):
+            loop = (skills / "review-fix-loop" / "SKILL.md").read_text(encoding="utf-8")
+            with self.subTest(provider=provider, transition="prerequisite"):
+                self.assertIn("PREREQUISITE_BLOCKED", loop)
+                self.assertRegex(loop, r"separate_prerequisite_or_followup` finding is (never|not) actionable")
+                self.assertIn("owner-approved packet revision reclassifies", loop)
+
+        claude_elbow = (CLAUDE_SKILLS / "elbow-grease" / "SKILL.md").read_text(encoding="utf-8")
+        loop_block = claude_elbow[claude_elbow.index("while findings exist:"):claude_elbow.index("<!-- Maintenance note:")]
+        self.assertLess(loop_block.index("Push the fix commit"), loop_block.index("Fetch/read back the remote ref"))
+        self.assertLess(loop_block.index("Fetch/read back the remote ref"), loop_block.index("Re-run Phase 2"))
+
+        claude_loop = (CLAUDE_SKILLS / "review-fix-loop" / "SKILL.md").read_text(encoding="utf-8")
+        for state in ("SCOPE_STOP", "OWNER_CHECKPOINT_REQUIRED"):
+            self.assertIn(state, claude_loop)
+        self.assertIn("must not collapse them", claude_loop)
 
 
 if __name__ == "__main__":

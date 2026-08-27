@@ -82,7 +82,7 @@ automatically when re-invoking `bsky:elbow-grease` after fixes.
 
 Before reviewing code, build understanding. This phase is **silent** — no output to user.
 
-1. **Identify the diff** — resolve `$ARGUMENTS` to a concrete set of changed files and hunks
+1. **Identify the diff** — resolve `$ARGUMENTS` to a concrete set of changed files and hunks. For cross-seat or independent acceptance, require a pushed remote ref and bind the review to its fetched full head SHA and full base SHA. Use exactly: `Review repository <canonical remote>, remote branch <name>, exact commit <full SHA>, over exact base <full SHA>.` A local path, pasted/reconstructed diff, or mutable branch name alone is not review authority. Verify the fetched object; every successor SHA invalidates the prior receipt.
 2. **Read PR context** — for PR scopes, retrieve the PR body, conversation comments,
    reviews, and inline review threads (including resolution state), plus linked issues or
    discussions relevant to the change. Read them before producing findings. Treat comments
@@ -97,6 +97,11 @@ Before reviewing code, build understanding. This phase is **silent** — no outp
 5. **Trace callers** — for any function/method whose signature, behavior, or error handling
    changed, use `find_referencing_symbols` to identify all call sites. This is critical for
    catching breakage that looks fine in isolation.
+6. **Locate governing scope** — record the owner-approved scope packet's
+   requirements, non-goals, permitted surfaces, and starting footprint. If it
+   does not exist, report **NO GOVERNING SCOPE PACKET**. Continue read-only
+   evidence gathering when useful, but do not infer authority from the diff or
+   make an architectural expansion mandatory.
 
 **Context budget:** aim for roughly 1:1 ratio of changed code to surrounding context.
 More context than code means you're over-reading. Less means you're likely missing impact.
@@ -635,29 +640,49 @@ After all six sub-agents return:
    carried forward into sub-agent prompts in subsequent rounds (see Phase 2,
    "Providing context to sub-agents") so agents do not re-flag the same non-issues.
    Include dismissed findings in the report's Summary section for transparency.
-5. **File issues for pre-existing findings** — if a finding is real but dismissed
-   because it's a pre-existing pattern (not introduced by this PR), file a GitHub
-   issue documenting the problem and affected code locations. These are real issues
-   discovered during review — capturing them ensures they don't get lost. Include
-   the issue URLs in the report's Dismissed section.
+5. **Classify scope disposition** — give every verified finding exactly one
+   disposition, independently of severity:
+   - `in_scope_fix`
+   - `bounded_in_scope_mitigation`
+   - `separate_prerequisite_or_followup`
+   - `scope_revision_required`
+
+   Severity proves urgency, not authority to expand scope. Use
+   `scope_revision_required` when the remedy changes approved architecture or
+   semantics, adds a public/operator tool, persistent artifact, protocol, state
+   machine, or subsystem, reverses a non-goal, or absorbs a systemic defect
+   shared by existing features. Emit this block verbatim and stop before fixing:
+
+   > **SCOPE EXPANSION: STOP.** The finding is valid, but fixing it here changes the architecture or expands the agreed scope. I am stopping. Proposed next state: record targeted issues, decide priority and blocking status, then either resume the original slice under unchanged semantics or supersede it with an explicitly approved scope.
+
+6. **Capture pre-existing findings only when authorized** — after classification
+   and after returning on any scope stop, a real pre-existing finding may be
+   proposed as a separate issue. Create that issue only with explicit issue-write
+   authority for the exact repository; repository code access or review authority
+   is not issue-creation authority. Otherwise report the proposed issue in-session.
 
 ## Phase 3.5: Fix & re-review (autonomous loop)
 
-If any P1, P2, or P3 findings survived verification in Phase 3, enter this loop.
+If any P1, P2, or P3 findings survived verification in Phase 3, enter this loop
+only for `in_scope_fix` findings and owner-approved
+`bounded_in_scope_mitigation` findings. Never automatically implement
+`separate_prerequisite_or_followup` or `scope_revision_required` findings.
 **Do not proceed to Phase 4 until the loop exits.**
 
 ```
 round = 1
 while findings exist:
-    1. Fix all findings from this round
+    1. Fix only eligible in-scope findings from this round; stop on scope revision
     2. Commit: "fix: address review findings (round N)"
     3. Push the fix commit
-    4. Re-run Phase 2 with --since <previous-commit>
+    4. Fetch/read back the remote ref, verify its full head and base SHAs, and
+       explicitly rebind the next independent review target to those exact objects
+    5. Re-run Phase 2 with --since <previous-commit> against the bound remote object
        (incremental review of only the fix commits)
-    5. Re-run Phase 3 on the new results
-    6. If zero findings → PASS → exit loop
-    7. If findings remain → round += 1, continue loop
-    8. If stalemate (fix requires design change) → exit loop with rationale
+    6. Re-run Phase 3 on the new results
+    7. If zero findings → PASS → exit loop
+    8. If findings remain → apply the scope and round checkpoints, then continue only when authorized
+    9. If a remedy requires design/scope change → emit SCOPE EXPANSION: STOP and exit
 ```
 
 <!-- Maintenance note: the while-loop pseudocode above is the mechanism that
@@ -670,8 +695,13 @@ done. You are not done. Step 4 (re-running the review on your fixes) is mandator
 Fixes introduce new issues more often than you expect. Do not report to the user
 until a clean round confirms the fixes are correct.
 
-This loop is autonomous — no user intervention between rounds. The user sees the
-final clean result, not each intermediate round.
+The autonomous budget is three rounds. If the third repair/review round does not
+converge, stop before round four for a mandatory owner scope/convergence
+discussion. Rounds four and five require explicit owner approval under a
+confirmed or revised scope packet. Stop sooner on any
+`scope_revision_required` finding or when two successive successors broaden
+rather than shrink the component/diff footprint. A configured five-round hard
+ceiling does not waive this checkpoint.
 
 ## Phase 4: Report
 
@@ -683,6 +713,8 @@ Present findings grouped by severity, then by file. Use this format:
 ### P1 — Critical (N findings)
 
 **<title>** — `path/to/file.py:42`
+Disposition: `<one of the four scope dispositions>`
+Scope evidence: `<requirement/non-goal reference or missing-packet statement>`
 <description with concrete fix>
 
 ### P2 — Important (N findings)

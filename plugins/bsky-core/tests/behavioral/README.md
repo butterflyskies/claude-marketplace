@@ -11,6 +11,17 @@ fresh independent Codex subagent under the same coordinator and thread, not a
 cross-provider evaluator, and performed instruction tracing rather than live
 service execution.
 
+That file remains historical evidence for its exact August 24 bytes.
+`ari-scope-governance-independent-receipt-20260827.json` supersedes only the
+current `scope-sharpen` binding after the shared scope-governance change. It
+records Ari's independent exact-remote-SHA source review plus the repository's
+decision-sensitive contract tests across Claude and Codex. It does not claim a
+fresh cross-provider instruction trace and does not rewrite the older receipt.
+The same receipt preserves that source review and separately records Ari's
+bounded current-main integration review. The integration section binds the
+canonical-main merge, its exact diff, and the one additive upstream Claude
+Elbow Grease note without rewriting the accepted source provenance.
+
 The receipts distinguish three kinds of evidence:
 
 - `real_workflow`: the candidate instructions were applied to the actual parity
