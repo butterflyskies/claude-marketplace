@@ -11,6 +11,8 @@ with severity, location, and concrete fixes — not style nits or praise.
 
 **This is a principle-bound skill.** First invoke `bsky:load-design-principles`
 and pass the returned digest to sub-agents as context alongside coding standards.
+The principles are bundled as versioned markdown files in
+`plugins/bsky/design-principles/v1/` — no external memory system required.
 
 Use memory-mcp's `read` tool to load the `code-review-patterns` memory (scope: global)
 before starting. It contains learned patterns from previous reviews that should inform
